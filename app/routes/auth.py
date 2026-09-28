@@ -1,10 +1,10 @@
 import os
 from dotenv import load_dotenv
-from flask import Blueprint, redirect, url_for, session, request, render_template
+from flask import Blueprint, redirect, url_for, session, request, render_template, flash
 from flask_dance.contrib.google import make_google_blueprint, google
 from app import db
 from app.models.user import User
-
+from werkzeug.security import generate_password_hash, check_password_hash
 load_dotenv(override=True)
 # Only allow insecure transport in local development — NEVER in production
 if os.environ.get("FLASK_ENV") == "development":
@@ -34,6 +34,53 @@ def login():
     if not google.authorized:
         return redirect(url_for("google.login"))
     return redirect(url_for("auth.after_google_login"))
+
+
+@auth_bp.route("/signin", methods=["POST"])
+def signin():
+    email = request.form.get("email")
+    password = request.form.get("password")
+    user = User.query.filter_by(email=email).first()
+
+    if user and user.password_hash and check_password_hash(user.password_hash, password):
+        session["user"] = {
+            "id": user.id,
+            "email": user.email,
+            "first_name": user.first_name,
+        }
+        return redirect(url_for("resume.dashboard"))
+    
+    flash("Invalid email or password.", "error")
+    return redirect(url_for("auth.auth_page"))
+
+
+@auth_bp.route("/signup", methods=["POST"])
+def signup():
+    first_name = request.form.get("first_name")
+    last_name = request.form.get("last_name")
+    email = request.form.get("email")
+    password = request.form.get("password")
+
+    existing_user = User.query.filter_by(email=email).first()
+    if existing_user:
+        flash("An account with this email already exists.", "error")
+        return redirect(url_for("auth.auth_page"))
+
+    new_user = User(
+        email=email,
+        first_name=first_name,
+        last_name=last_name,
+        password_hash=generate_password_hash(password)
+    )
+    db.session.add(new_user)
+    db.session.commit()
+
+    session["user"] = {
+        "id": new_user.id,
+        "email": new_user.email,
+        "first_name": new_user.first_name,
+    }
+    return redirect(url_for("resume.dashboard"))
 
 
 @auth_bp.route("/google/callback")
