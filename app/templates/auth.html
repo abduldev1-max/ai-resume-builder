@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Sign In — ResumeAI</title>
+  <meta name="description" content="Sign in or create your AI Resume Builder account to start building ATS-optimized resumes."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+            serif: ['Newsreader', 'Georgia', 'serif']
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; min-height: 100vh; background: #FAF9F6; color: #1F1E1D; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #D9D5CF; border-radius: 9999px; }
+
+    /* Tab bar */
+    .tab-btn {
+      flex: 1; padding: 12px 0; font-size: 13px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      color: #8F8C86; border-bottom: 2px solid transparent;
+      background: none; cursor: pointer; transition: color .15s, border-color .15s;
+    }
+    .tab-btn.active { color: #7c3aed; border-bottom-color: #7c3aed; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Input */
+    .auth-input {
+      width: 100% !important; background: #FAF9F6 !important; border: 1.5px solid #E8E5DF !important;
+      border-radius: 12px !important; padding: 11px 14px 11px 52px !important;
+      font-size: 13.5px !important; color: #1F1E1D !important; outline: none !important;
+      transition: border-color .15s, box-shadow .15s; box-shadow: none;
+    }
+    .auth-input:focus { border-color: #a78bfa !important; box-shadow: 0 0 0 3px rgba(124,58,237,0.1) !important; }
+    .auth-input::placeholder { color: #BDB9B2 !important; }
+
+    /* Gradient button */
+    .btn-gradient {
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      width: 100%; padding: 12px 20px; border-radius: 12px; border: none;
+      font-size: 13.5px; font-weight: 600; color: #fff; cursor: pointer;
+      background: linear-gradient(135deg, #7c3aed, #06b6d4);
+      box-shadow: 0 6px 20px rgba(124,58,237,0.25);
+      transition: transform .15s, box-shadow .15s, opacity .15s;
+    }
+    .btn-gradient:hover { transform: translateY(-1px); box-shadow: 0 10px 28px rgba(124,58,237,0.32); }
+    .btn-gradient:active { transform: scale(0.98); }
+
+    /* Google button */
+    .btn-google {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; padding: 12px 20px; border-radius: 12px;
+      border: 1.5px solid #E8E5DF; background: #fff;
+      font-size: 13.5px; font-weight: 600; color: #1F1E1D;
+      text-decoration: none; cursor: pointer; overflow: hidden; position: relative;
+      transition: border-color .15s, box-shadow .15s, transform .12s;
+    }
+    .btn-google:hover { border-color: #c4b5fd; box-shadow: 0 4px 16px rgba(0,0,0,0.07); transform: translateY(-1px); }
+    .btn-google:active { transform: scale(0.98); }
+    .btn-google .shimmer {
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(124,58,237,0.06), transparent);
+      transform: translateX(-100%); transition: transform .6s ease;
+    }
+    .btn-google:hover .shimmer { transform: translateX(100%); }
+
+    /* Password strength */
+    .strength-bar { height: 3px; flex: 1; border-radius: 99px; background: #E8E5DF; transition: background .25s; }
+
+    /* Feature pills (right panel) */
+    .feature-pill {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px; background: rgba(255,255,255,0.7);
+      border: 1px solid #E8E5DF; border-radius: 14px;
+      backdrop-filter: blur(8px);
+    }
+
+    /* Page animations */
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateX(-18px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .card-animate { animation: fadeSlideIn .45s ease both; }
+
+    /* Decorative blobs */
+    @keyframes blobFloat {
+      0%,100% { transform: translateY(0) scale(1); }
+      50%      { transform: translateY(-18px) scale(1.04); }
+    }
+    .blob1 { animation: blobFloat 10s ease-in-out infinite; }
+    .blob2 { animation: blobFloat 14s ease-in-out infinite reverse; }
+  </style>
+</head>
+<body class="font-sans antialiased min-h-screen flex flex-col">
+
+<!-- ═══════════════════════════════════════
+     TOP NAVIGATION
+═══════════════════════════════════════ -->
+<header class="fixed top-0 left-0 right-0 z-50 h-14 px-6 bg-[#FAF9F6]/90 backdrop-blur-xl border-b border-[#EFECE6] flex items-center justify-between">
+
+  <a href="{{ url_for('main.index') }}" class="flex items-center gap-2.5 no-underline">
+    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="ResumeAI Logo" class="w-7 h-7 object-contain">
+    <span class="font-serif text-[1.1rem] font-medium tracking-tight text-[#1F1E1D]">ResumeAI</span>
+  </a>
+
+  <a href="{{ url_for('main.index') }}"
+     class="flex items-center gap-1.5 text-[13px] font-medium text-[#666461] hover:text-[#1F1E1D] transition-colors no-underline">
+    <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+    Back to Home
+  </a>
+</header>
+
+
+<!-- ═══════════════════════════════════════
+     AUTH LAYOUT
+═══════════════════════════════════════ -->
+<main class="flex-1 pt-14 flex min-h-screen">
+
+  <!-- ── LEFT PANEL: Auth Card ── -->
+  <div class="flex-1 flex items-center justify-center px-6 py-16 relative overflow-hidden">
+
+    <!-- Background decoration -->
+    <div class="absolute inset-0" style="background:linear-gradient(150deg,#f5f3ff 0%,#ede9fe 35%,#FAF9F6 70%)"></div>
+    <div class="blob1 absolute -top-20 -left-20 w-80 h-80 rounded-full opacity-30 pointer-events-none" style="background:radial-gradient(circle,rgba(124,58,237,0.3),transparent 70%)"></div>
+    <div class="blob2 absolute bottom-0 right-0 w-64 h-64 rounded-full opacity-20 pointer-events-none" style="background:radial-gradient(circle,rgba(6,182,212,0.3),transparent 70%)"></div>
+
+    <!-- Card -->
+    <div class="card-animate relative z-10 w-full max-w-[400px]">
+
+      <!-- Logo + Headline -->
+      <div class="text-center mb-7">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="ResumeAI Logo" class="w-14 h-14 object-contain mx-auto mb-4 drop-shadow-lg">
+        <h1 class="text-[1.45rem] font-bold text-[#1F1E1D] tracking-tight">Welcome to ResumeAI</h1>
+        <p class="text-[13.5px] text-[#8F8C86] mt-1">Your career starts with one great document.</p>
+      </div>
+
+      <!-- Glass card -->
+      <div class="bg-white/80 backdrop-blur-xl border border-[#E8E5DF] rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.08)] overflow-hidden">
+
+        <!-- Tab bar -->
+        <div class="flex border-b border-[#EFECE6]">
+          <button id="tab-signin" class="tab-btn active" onclick="switchTab('signin')">Sign In</button>
+          <button id="tab-signup" class="tab-btn" onclick="switchTab('signup')">Sign Up</button>
+        </div>
+
+        <!-- Panels -->
+        <div class="p-6">
+
+          <!-- ── Google OAuth (always visible) ── -->
+          <a href="{{ url_for('auth.login') }}" class="btn-google mb-5">
+            <div class="shimmer"></div>
+            <svg class="w-[18px] h-[18px] flex-shrink-0" viewBox="0 0 24 24">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            <span>Continue with Google</span>
+          </a>
+
+          <!-- Divider -->
+          <div class="flex items-center gap-3 mb-5">
+            <div class="flex-1 border-t border-[#EFECE6]"></div>
+            <span class="text-[11px] text-[#BDB9B2] font-semibold uppercase tracking-wider">or</span>
+            <div class="flex-1 border-t border-[#EFECE6]"></div>
+          </div>
+
+          <!-- ── SIGN IN PANEL ── -->
+          <div id="panel-signin" class="tab-panel active">
+            <form id="signin-form" onsubmit="handleSignIn(event)" class="flex flex-col gap-4">
+
+              <!-- Email -->
+              <div>
+                <label for="signin-email" class="block text-[11.5px] font-semibold uppercase tracking-widest text-[#8F8C86] mb-1.5">Email</label>
+                <div class="relative">
+                  <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[18px] text-[#BDB9B2] pointer-events-none">mail</span>
+                  <input id="signin-email" type="email" required placeholder="you@example.com" class="auth-input"/>
+                </div>
+              </div>
+
+              <!-- Password -->
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <label for="signin-password" class="text-[11.5px] font-semibold uppercase tracking-widest text-[#8F8C86]">Password</label>
+                  <a href="#" class="text-[12px] text-[#7c3aed] hover:opacity-70 transition-opacity">Forgot password?</a>
+                </div>
+                <div class="relative">
+                  <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[18px] text-[#BDB9B2] pointer-events-none">lock</span>
+                  <input id="signin-password" type="password" required placeholder="••••••••" class="auth-input pr-10"/>
+                  <button type="button" onclick="togglePw('signin-password', this)"
+                          class="absolute right-3 top-1/2 -translate-y-1/2 text-[#BDB9B2] hover:text-[#666461] transition-colors">
+                    <span class="material-symbols-outlined text-[18px]">visibility</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Submit -->
+              <button id="signin-btn" type="submit" class="btn-gradient mt-1">
+                <span>Sign In</span>
+                <span class="material-symbols-outlined text-[17px]">arrow_forward</span>
+              </button>
+
+            </form>
+          </div>
+
+          <!-- ── SIGN UP PANEL ── -->
+          <div id="panel-signup" class="tab-panel">
+            <form id="signup-form" onsubmit="handleSignUp(event)" class="flex flex-col gap-4">
+
+              <!-- Name row -->
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label for="first-name" class="block text-[11.5px] font-semibold uppercase tracking-widest text-[#8F8C86] mb-1.5">First Name</label>
+                  <div class="relative">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[18px] text-[#BDB9B2] pointer-events-none">person</span>
+                    <input id="first-name" type="text" required placeholder="John" class="auth-input"/>
+                  </div>
+                </div>
+                <div>
+                  <label for="last-name" class="block text-[11.5px] font-semibold uppercase tracking-widest text-[#8F8C86] mb-1.5">Last Name</label>
+                  <input id="last-name" type="text" required placeholder="Doe"
+                         class="w-full bg-[#FAF9F6] border-[1.5px] border-[#E8E5DF] rounded-xl px-3 py-[11px] text-[13.5px] text-[#1F1E1D] outline-none focus:border-[#a78bfa] focus:shadow-[0_0_0_3px_rgba(124,58,237,0.1)] transition-all placeholder:text-[#BDB9B2]"/>
+                </div>
+              </div>
+
+              <!-- Email -->
+              <div>
+                <label for="signup-email" class="block text-[11.5px] font-semibold uppercase tracking-widest text-[#8F8C86] mb-1.5">Email</label>
+                <div class="relative">
+                  <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[18px] text-[#BDB9B2] pointer-events-none">mail</span>
+                  <input id="signup-email" type="email" required placeholder="you@example.com" class="auth-input"/>
+                </div>
+              </div>
+
+              <!-- Password + strength -->
+              <div>
+                <label for="signup-password" class="block text-[11.5px] font-semibold uppercase tracking-widest text-[#8F8C86] mb-1.5">Password</label>
+                <div class="relative">
+                  <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[18px] text-[#BDB9B2] pointer-events-none">lock</span>
+                  <input id="signup-password" type="password" required placeholder="Min. 8 characters"
+                         oninput="checkStrength(this.value)" class="auth-input pr-10"/>
+                  <button type="button" onclick="togglePw('signup-password', this)"
+                          class="absolute right-3 top-1/2 -translate-y-1/2 text-[#BDB9B2] hover:text-[#666461] transition-colors">
+                    <span class="material-symbols-outlined text-[18px]">visibility</span>
+                  </button>
+                </div>
+                <!-- Strength bar -->
+                <div class="flex gap-1.5 mt-2">
+                  <div id="bar1" class="strength-bar"></div>
+                  <div id="bar2" class="strength-bar"></div>
+                  <div id="bar3" class="strength-bar"></div>
+                  <div id="bar4" class="strength-bar"></div>
+                </div>
+                <p id="strength-label" class="text-[11px] text-[#8F8C86] mt-1"></p>
+              </div>
+
+              <!-- Submit -->
+              <button id="signup-btn" type="submit" class="btn-gradient mt-1">
+                <span>Create Account</span>
+                <span class="material-symbols-outlined text-[17px]">rocket_launch</span>
+              </button>
+
+              <p class="text-[11.5px] text-[#8F8C86] text-center">
+                By signing up you agree to our
+                <a href="#" class="text-[#7c3aed] hover:underline">Terms</a> and
+                <a href="#" class="text-[#7c3aed] hover:underline">Privacy Policy</a>.
+              </p>
+
+            </form>
+          </div>
+
+        </div><!-- /p-6 -->
+      </div><!-- /glass card -->
+
+      <!-- Trust badges -->
+      <div class="flex items-center justify-center gap-6 mt-6 flex-wrap">
+        <div class="flex items-center gap-1.5 text-[12px] text-[#8F8C86]">
+          <span class="material-symbols-outlined text-[15px]" style="color:#10b981;font-variation-settings:'FILL' 1">lock</span>
+          Encrypted &amp; secure
+        </div>
+        <div class="flex items-center gap-1.5 text-[12px] text-[#8F8C86]">
+          <span class="material-symbols-outlined text-[15px]" style="color:#7c3aed;font-variation-settings:'FILL' 1">verified_user</span>
+          Google OAuth 2.0
+        </div>
+        <div class="flex items-center gap-1.5 text-[12px] text-[#8F8C86]">
+          <span class="material-symbols-outlined text-[15px]" style="color:#06b6d4;font-variation-settings:'FILL' 1">credit_card_off</span>
+          No credit card
+        </div>
+      </div>
+
+    </div><!-- /max-w-400 -->
+  </div><!-- /left panel -->
+
+
+  <!-- ── RIGHT PANEL: Features (desktop only) ── -->
+  <div class="hidden lg:flex w-[440px] flex-shrink-0 flex-col justify-center px-12 py-20 bg-white border-l border-[#EFECE6] relative overflow-hidden">
+
+    <!-- Decorative -->
+    <div class="absolute -right-16 -top-16 w-72 h-72 rounded-full opacity-25 pointer-events-none" style="background:radial-gradient(circle,rgba(124,58,237,0.3),transparent 70%)"></div>
+    <div class="absolute -left-8 bottom-0 w-48 h-48 rounded-full opacity-15 pointer-events-none" style="background:radial-gradient(circle,rgba(6,182,212,0.3),transparent 70%)"></div>
+
+    <!-- Hero gradient banner -->
+    <div class="rounded-2xl px-6 py-7 mb-8 relative overflow-hidden" style="background:linear-gradient(135deg,#f5f3ff 0%,#ede9fe 50%,#e0f2fe 100%);border:1px solid #e9d5ff">
+      <div class="absolute -right-4 -top-4 w-24 h-24 rounded-full opacity-20" style="background:radial-gradient(circle,#7c3aed,transparent)"></div>
+      <p class="text-[11px] font-bold uppercase tracking-widest text-[#7c3aed] mb-2">AI Resume Builder</p>
+      <h2 class="text-[1.35rem] font-bold text-[#1F1E1D] leading-snug tracking-tight">
+        Build a resume that<br>gets you hired.
+      </h2>
+      <p class="text-[13px] text-[#666461] mt-2 leading-relaxed">Powered by Grok + Gemini AI. ATS-optimized. LaTeX quality.</p>
+    </div>
+
+    <!-- Feature list -->
+    <div class="flex flex-col gap-3">
+
+      <div class="feature-pill">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(124,58,237,0.08)">
+          <span class="material-symbols-outlined text-[18px]" style="color:#7c3aed;font-variation-settings:'FILL' 1">auto_fix_high</span>
+        </div>
+        <div>
+          <div class="text-[13.5px] font-semibold text-[#1F1E1D]">AI-Powered Rewrites</div>
+          <div class="text-[12px] text-[#8F8C86]">Bullet points optimized for impact & ATS</div>
+        </div>
+      </div>
+
+      <div class="feature-pill">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(6,182,212,0.08)">
+          <span class="material-symbols-outlined text-[18px]" style="color:#06b6d4;font-variation-settings:'FILL' 1">check_circle</span>
+        </div>
+        <div>
+          <div class="text-[13.5px] font-semibold text-[#1F1E1D]">ATS Score Checker</div>
+          <div class="text-[12px] text-[#8F8C86]">Know exactly how recruiters see your resume</div>
+        </div>
+      </div>
+
+      <div class="feature-pill">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(16,185,129,0.08)">
+          <span class="material-symbols-outlined text-[18px]" style="color:#10b981;font-variation-settings:'FILL' 1">picture_as_pdf</span>
+        </div>
+        <div>
+          <div class="text-[13.5px] font-semibold text-[#1F1E1D]">LaTeX PDF Export</div>
+          <div class="text-[12px] text-[#8F8C86]">Professional typography. One click download.</div>
+        </div>
+      </div>
+
+      <div class="feature-pill">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(217,119,87,0.08)">
+          <span class="material-symbols-outlined text-[18px]" style="color:#D97757;font-variation-settings:'FILL' 1">manage_accounts</span>
+        </div>
+        <div>
+          <div class="text-[13.5px] font-semibold text-[#1F1E1D]">Multi-Resume Manager</div>
+          <div class="text-[12px] text-[#8F8C86]">Save, edit, and track multiple versions</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ATS Score preview badge -->
+    <div class="mt-8 bg-[#FAF9F6] border border-[#E8E5DF] rounded-2xl p-4 flex items-center gap-4">
+      <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(16,185,129,0.1)">
+        <span class="material-symbols-outlined text-[22px]" style="color:#10b981;font-variation-settings:'FILL' 1">verified</span>
+      </div>
+      <div class="flex-1">
+        <div class="text-[13px] font-semibold text-[#1F1E1D] mb-1">Average ATS Score</div>
+        <div class="w-full h-2 bg-[#EFECE6] rounded-full overflow-hidden">
+          <div class="h-full rounded-full" style="width:92%;background:linear-gradient(90deg,#7c3aed,#06b6d4)"></div>
+        </div>
+        <div class="text-[12px] text-[#8F8C86] mt-1">92% — Ready for submission</div>
+      </div>
+    </div>
+
+  </div><!-- /right panel -->
+
+</main>
+
+<script>
+  /* ── Tab switching ── */
+  function switchTab(tab) {
+    ['signin','signup'].forEach(t => {
+      document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+      document.getElementById('panel-' + t).classList.toggle('active', t === tab);
+    });
+  }
+
+  /* ── Password toggle ── */
+  function togglePw(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon  = btn.querySelector('.material-symbols-outlined');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.textContent = 'visibility_off';
+    } else {
+      input.type = 'password';
+      icon.textContent = 'visibility';
+    }
+  }
+
+  /* ── Password strength ── */
+  function checkStrength(pw) {
+    let score = 0;
+    if (pw.length >= 8) score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/[0-9]/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+
+    const colors = ['#ef4444','#f97316','#eab308','#10b981'];
+    const labels = ['Weak','Fair','Good','Strong'];
+
+    for (let i = 1; i <= 4; i++) {
+      const bar = document.getElementById('bar' + i);
+      bar.style.background = i <= score ? colors[score - 1] : '#E8E5DF';
+    }
+    const lbl = document.getElementById('strength-label');
+    lbl.textContent = pw.length ? (labels[score - 1] || '') : '';
+    lbl.style.color  = score > 0 ? colors[score - 1] : '';
+  }
+
+  /* ── Sign in handler ── */
+  function handleSignIn(e) {
+    e.preventDefault();
+    const btn = document.getElementById('signin-btn');
+    btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-[17px]">progress_activity</span><span>Signing in…</span>';
+    setTimeout(() => {
+      btn.innerHTML = '<span>Sign In</span><span class="material-symbols-outlined text-[17px]">arrow_forward</span>';
+    }, 2000);
+  }
+
+  /* ── Sign up handler ── */
+  function handleSignUp(e) {
+    e.preventDefault();
+    const btn = document.getElementById('signup-btn');
+    btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-[17px]">progress_activity</span><span>Creating account…</span>';
+    setTimeout(() => {
+      btn.innerHTML = '<span>Create Account</span><span class="material-symbols-outlined text-[17px]">rocket_launch</span>';
+    }, 2000);
+  }
+</script>
+
+</body>
+</html>
