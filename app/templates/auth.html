@@ -159,6 +159,19 @@
           <button id="tab-signup" class="tab-btn" onclick="switchTab('signup')">Sign Up</button>
         </div>
 
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="px-6 pt-4">
+            {% for category, message in messages %}
+              <div class="p-3 mb-2 rounded-xl text-[13px] {{ 'bg-red-50 text-red-600 border border-red-200' if category == 'error' else 'bg-green-50 text-green-600 border border-green-200' }}">
+                {{ message }}
+              </div>
+            {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
         <!-- Panels -->
         <div class="p-6">
 
@@ -183,14 +196,14 @@
 
           <!-- ── SIGN IN PANEL ── -->
           <div id="panel-signin" class="tab-panel active">
-            <form id="signin-form" onsubmit="handleSignIn(event)" class="flex flex-col gap-4">
+            <form action="{{ url_for('auth.signin') }}" method="POST" id="signin-form" class="flex flex-col gap-4">
 
               <!-- Email -->
               <div>
                 <label for="signin-email" class="block text-[11.5px] font-semibold uppercase tracking-widest text-[#8F8C86] mb-1.5">Email</label>
                 <div class="relative">
                   <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[18px] text-[#BDB9B2] pointer-events-none">mail</span>
-                  <input id="signin-email" type="email" required placeholder="you@example.com" class="auth-input"/>
+                  <input id="signin-email" name="email" type="email" required placeholder="you@example.com" class="auth-input"/>
                 </div>
               </div>
 
@@ -202,7 +215,7 @@
                 </div>
                 <div class="relative">
                   <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[18px] text-[#BDB9B2] pointer-events-none">lock</span>
-                  <input id="signin-password" type="password" required placeholder="••••••••" class="auth-input pr-10"/>
+                  <input id="signin-password" name="password" type="password" required placeholder="••••••••" class="auth-input pr-10"/>
                   <button type="button" onclick="togglePw('signin-password', this)"
                           class="absolute right-3 top-1/2 -translate-y-1/2 text-[#BDB9B2] hover:text-[#666461] transition-colors">
                     <span class="material-symbols-outlined text-[18px]">visibility</span>
@@ -221,7 +234,7 @@
 
           <!-- ── SIGN UP PANEL ── -->
           <div id="panel-signup" class="tab-panel">
-            <form id="signup-form" onsubmit="handleSignUp(event)" class="flex flex-col gap-4">
+            <form action="{{ url_for('auth.signup') }}" method="POST" id="signup-form" class="flex flex-col gap-4">
 
               <!-- Name row -->
               <div class="grid grid-cols-2 gap-3">
@@ -229,12 +242,12 @@
                   <label for="first-name" class="block text-[11.5px] font-semibold uppercase tracking-widest text-[#8F8C86] mb-1.5">First Name</label>
                   <div class="relative">
                     <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[18px] text-[#BDB9B2] pointer-events-none">person</span>
-                    <input id="first-name" type="text" required placeholder="John" class="auth-input"/>
+                    <input id="first-name" name="first_name" type="text" required placeholder="John" class="auth-input"/>
                   </div>
                 </div>
                 <div>
                   <label for="last-name" class="block text-[11.5px] font-semibold uppercase tracking-widest text-[#8F8C86] mb-1.5">Last Name</label>
-                  <input id="last-name" type="text" required placeholder="Doe"
+                  <input id="last-name" name="last_name" type="text" required placeholder="Doe"
                          class="w-full bg-[#FAF9F6] border-[1.5px] border-[#E8E5DF] rounded-xl px-3 py-[11px] text-[13.5px] text-[#1F1E1D] outline-none focus:border-[#a78bfa] focus:shadow-[0_0_0_3px_rgba(124,58,237,0.1)] transition-all placeholder:text-[#BDB9B2]"/>
                 </div>
               </div>
@@ -244,7 +257,7 @@
                 <label for="signup-email" class="block text-[11.5px] font-semibold uppercase tracking-widest text-[#8F8C86] mb-1.5">Email</label>
                 <div class="relative">
                   <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[18px] text-[#BDB9B2] pointer-events-none">mail</span>
-                  <input id="signup-email" type="email" required placeholder="you@example.com" class="auth-input"/>
+                  <input id="signup-email" name="email" type="email" required placeholder="you@example.com" class="auth-input"/>
                 </div>
               </div>
 
@@ -253,7 +266,7 @@
                 <label for="signup-password" class="block text-[11.5px] font-semibold uppercase tracking-widest text-[#8F8C86] mb-1.5">Password</label>
                 <div class="relative">
                   <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[18px] text-[#BDB9B2] pointer-events-none">lock</span>
-                  <input id="signup-password" type="password" required placeholder="Min. 8 characters"
+                  <input id="signup-password" name="password" type="password" required placeholder="Min. 8 characters"
                          oninput="checkStrength(this.value)" class="auth-input pr-10"/>
                   <button type="button" onclick="togglePw('signup-password', this)"
                           class="absolute right-3 top-1/2 -translate-y-1/2 text-[#BDB9B2] hover:text-[#666461] transition-colors">
@@ -431,24 +444,16 @@
   }
 
   /* ── Sign in handler ── */
-  function handleSignIn(e) {
-    e.preventDefault();
+  document.getElementById('signin-form').addEventListener('submit', function() {
     const btn = document.getElementById('signin-btn');
     btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-[17px]">progress_activity</span><span>Signing in…</span>';
-    setTimeout(() => {
-      btn.innerHTML = '<span>Sign In</span><span class="material-symbols-outlined text-[17px]">arrow_forward</span>';
-    }, 2000);
-  }
+  });
 
   /* ── Sign up handler ── */
-  function handleSignUp(e) {
-    e.preventDefault();
+  document.getElementById('signup-form').addEventListener('submit', function() {
     const btn = document.getElementById('signup-btn');
     btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-[17px]">progress_activity</span><span>Creating account…</span>';
-    setTimeout(() => {
-      btn.innerHTML = '<span>Create Account</span><span class="material-symbols-outlined text-[17px]">rocket_launch</span>';
-    }, 2000);
-  }
+  });
 </script>
 
 </body>
