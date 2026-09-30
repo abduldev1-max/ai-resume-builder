@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: ai-resume-builder
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn "app:create_app()" --bind 0.0.0.0:$PORT --workers 2 --timeout 120 --preload
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true       # Render auto-generates a secure random value
+      - key: DATABASE_URL
+        sync: false               # You will paste this from Neon.tech
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GROK_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: LATEX_COMPILE_MODE
+        value: local
+      - key: DEV_AUTO_LOGIN
+        value: false
+      - key: RENDER_EXTERNAL_URL
+        value: https://ai-resume-builder-3l2a.onrender.com
+      - key: OAUTHLIB_RELAX_TOKEN_SCOPE
+        value: "1"
