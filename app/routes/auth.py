@@ -6,9 +6,22 @@ from app import db
 from app.models.user import User
 from werkzeug.security import generate_password_hash, check_password_hash
 load_dotenv(override=True)
-# Only allow insecure transport in local development — NEVER in production
+
+# ── OAuth environment setup ──────────────────────────────────────────────────
+# Allow insecure transport (HTTP) only in local development — NEVER in production
 if os.environ.get("FLASK_ENV") == "development":
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+
+# Relax scope checking — Google sometimes returns a slightly different scope set
+os.environ.setdefault("OAUTHLIB_RELAX_TOKEN_SCOPE", "1")
+
+# In production (Render) we must tell flask-dance the exact HTTPS callback URL.
+# In local dev we leave it as None so flask-dance auto-detects localhost.
+_render_url = os.environ.get("RENDER_EXTERNAL_URL") or os.environ.get("PRODUCTION_URL", "").rstrip("/")
+if _render_url:
+    _redirect_url = f"{_render_url}/login/google/authorized"
+else:
+    _redirect_url = None
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -18,6 +31,7 @@ google_bp = make_google_blueprint(
     scope=["openid", "https://www.googleapis.com/auth/userinfo.email",
            "https://www.googleapis.com/auth/userinfo.profile"],
     redirect_to="auth.after_google_login",
+    redirect_url=_redirect_url,
 )
 
 
