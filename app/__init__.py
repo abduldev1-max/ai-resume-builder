@@ -3,7 +3,6 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from flask_session import Session
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
@@ -25,9 +24,16 @@ def create_app():
         db_url = db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
     app.config["SQLALCHEMY_DATABASE_URI"] = db_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["SESSION_TYPE"] = "filesystem"
-    app.config["SESSION_FILE_DIR"] = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "flask_sessions")
-    app.config["SESSION_PERMANENT"] = False
+
+    # ── Session config ──────────────────────────────────────
+    # Use Flask's built-in signed cookie sessions (NO server-side storage).
+    # This is critical for Render: its ephemeral filesystem loses files on
+    # deploy/restart, and with multiple Gunicorn workers, filesystem sessions
+    # cause OAuth state mismatches. Cookie sessions store everything in a
+    # signed cookie on the client — no server storage needed.
+    app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+    app.config["SESSION_COOKIE_SECURE"] = os.environ.get("FLASK_ENV") != "development"
+    app.config["SESSION_COOKIE_HTTPONLY"] = True
 
     # ── Force HTTPS scheme in production (Render) ───────────
     if os.environ.get("FLASK_ENV") != "development":
@@ -36,7 +42,6 @@ def create_app():
     # ── Extensions ──────────────────────────────────────────
     db.init_app(app)
     migrate.init_app(app, db)
-    Session(app)
 
     # ── Trust reverse-proxy headers (Render, Heroku, etc.) ──
     # x_proto=1 makes Flask read X-Forwarded-Proto so url_for() generates https://
