@@ -25,7 +25,9 @@ def create_app():
         db_url = db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
     app.config["SQLALCHEMY_DATABASE_URI"] = db_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["SESSION_TYPE"] = "sqlalchemy"
+    app.config["SESSION_TYPE"] = "filesystem"
+    app.config["SESSION_FILE_DIR"] = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "flask_sessions")
+    app.config["SESSION_PERMANENT"] = False
 
     # ── Force HTTPS scheme in production (Render) ───────────
     if os.environ.get("FLASK_ENV") != "development":
@@ -34,7 +36,6 @@ def create_app():
     # ── Extensions ──────────────────────────────────────────
     db.init_app(app)
     migrate.init_app(app, db)
-    app.config["SESSION_SQLALCHEMY"] = db
     Session(app)
 
     # ── Trust reverse-proxy headers (Render, Heroku, etc.) ──

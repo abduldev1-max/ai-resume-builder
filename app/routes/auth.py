@@ -32,8 +32,8 @@ google_bp = make_google_blueprint(
     client_secret=os.environ.get("GOOGLE_CLIENT_SECRET"),
     scope=["openid", "https://www.googleapis.com/auth/userinfo.email",
            "https://www.googleapis.com/auth/userinfo.profile"],
-    # After signal handler runs, flask-dance redirects here
-    redirect_to="resume.dashboard",
+    # Redirect to our dedicated done route — keeps the flow inside our app
+    redirect_to="auth.google_done",
     redirect_url=_redirect_url,
 )
 
@@ -101,7 +101,20 @@ def auth_page():
 @auth_bp.route("/login")
 def login():
     """Kick off Google OAuth flow."""
+    # Force the session to be saved NOW so the OAuth state cookie persists
+    # across Gunicorn workers (avoids state mismatch on callback).
+    session.modified = True
     return redirect(url_for("google.login"))
+
+
+@auth_bp.route("/google/done")
+def google_done():
+    """Fallback landing page after Google OAuth. The signal handler already
+    set session['user'], so we just redirect to the dashboard."""
+    if "user" not in session:
+        flash("Google sign-in failed. Please try again.", "error")
+        return redirect(url_for("auth.auth_page"))
+    return redirect(url_for("resume.dashboard"))
 
 
 @auth_bp.route("/signin", methods=["POST"])
