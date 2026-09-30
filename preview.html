@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>AI Resume Builder — Turn Raw Experience Into a Job-Winning Resume</title>
+  <meta name="description" content="AI-powered resume builder for CS students. ATS-optimized, LaTeX-formatted, downloadable PDF in minutes."/>
+  <style>
+    @layer base {
+      html, body { margin: 0; padding: 0; }
+      body { overscroll-behavior: none; }
+      main > :first-child { margin-top: 0 !important; }
+      main > :last-child  { margin-bottom: 0 !important; }
+    }
+    ::-webkit-scrollbar { display: none; }
+    .perspective-1000 { perspective: 1000px; }
+    .rotate-y-neg10  { transform: rotateY(-10deg) rotateX(5deg); }
+    .resume-card:hover { transform: rotateY(0deg) rotateX(0deg); }
+    .resume-card { transition: transform 0.7s ease-out; }
+  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "on-tertiary-fixed-variant": "#42474f",
+            "secondary-fixed-dim":       "#4cd7f6",
+            "tertiary-fixed-dim":        "#c2c7d0",
+            "surface-dim":               "#10131a",
+            "surface-variant":           "#32353c",
+            "tertiary-fixed":            "#dee2ec",
+            "outline":                   "#918fa1",
+            "tertiary":                  "#c2c7d0",
+            "background":                "#10131a",
+            "surface-container-highest": "#32353c",
+            "primary-fixed":             "#e2dfff",
+            "surface":                   "#10131a",
+            "error":                     "#ffb4ab",
+            "on-secondary-container":    "#00424e",
+            "secondary-fixed":           "#acedff",
+            "on-error":                  "#690005",
+            "on-secondary-fixed":        "#001f26",
+            "inverse-surface":           "#e1e2eb",
+            "primary":                   "#c3c0ff",
+            "primary-container":         "#4f46e5",
+            "tertiary-container":        "#5b6068",
+            "surface-container-low":     "#191c22",
+            "on-background":             "#e1e2eb",
+            "on-surface":                "#e1e2eb",
+            "inverse-on-surface":        "#2e3037",
+            "on-primary-container":      "#dad7ff",
+            "primary-fixed-dim":         "#c3c0ff",
+            "on-primary":                "#1d00a5",
+            "outline-variant":           "#464555",
+            "on-tertiary-fixed":         "#171c23",
+            "on-secondary":              "#003640",
+            "inverse-primary":           "#4d44e3",
+            "secondary":                 "#4cd7f6",
+            "surface-container-high":    "#272a31",
+            "on-primary-fixed-variant":  "#3323cc",
+            "surface-tint":              "#c3c0ff",
+            "surface-container":         "#1d2026",
+            "on-surface-variant":        "#c7c4d8",
+            "on-error-container":        "#ffdad6",
+            "secondary-container":       "#03b5d3",
+            "error-container":           "#93000a",
+            "on-secondary-fixed-variant":"#004e5c",
+            "on-primary-fixed":          "#0f0069",
+            "surface-container-lowest":  "#0b0e14",
+            "on-tertiary-container":     "#d7dbe5",
+            "surface-bright":            "#363940",
+            "on-tertiary":               "#2c3138"
+          },
+          borderRadius: {
+            DEFAULT: "0.125rem", lg: "0.25rem", xl: "0.5rem", full: "0.75rem"
+          },
+          spacing: {
+            base: "4px", sm: "1rem", lg: "2.5rem", md: "1.5rem",
+            gutter: "24px", margin: "32px", xs: "0.5rem", xl: "4rem"
+          },
+          fontFamily: {
+            "headline-lg":        ["Outfit"],
+            "body-lg":            ["Inter"],
+            "display":            ["Outfit"],
+            "headline-md":        ["Outfit"],
+            "body-md":            ["Inter"],
+            "headline-lg-mobile": ["Outfit"],
+            "label-sm":           ["Inter"]
+          },
+          fontSize: {
+            "headline-lg":        ["32px", { lineHeight: "1.2",  letterSpacing: "-0.01em", fontWeight: "600" }],
+            "body-lg":            ["18px", { lineHeight: "1.6",  fontWeight: "400" }],
+            "display":            ["48px", { lineHeight: "1.1",  letterSpacing: "-0.02em", fontWeight: "600" }],
+            "headline-md":        ["24px", { lineHeight: "1.3",  fontWeight: "500" }],
+            "body-md":            ["16px", { lineHeight: "1.6",  fontWeight: "400" }],
+            "headline-lg-mobile": ["24px", { lineHeight: "1.2",  fontWeight: "600" }],
+            "label-sm":           ["13px", { lineHeight: "1",    letterSpacing: "0.02em", fontWeight: "500" }]
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+</head>
+
+<body class="bg-background font-body-md text-on-surface">
+
+  <!-- ── Top Nav ─────────────────────────────────────────── -->
+  <header class="fixed top-0 w-full z-50 bg-surface-dim/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.1)]">
+    <div class="h-16 max-w-[1280px] mx-auto px-margin flex items-center justify-between">
+
+      <!-- Logo -->
+      <div class="flex items-center gap-xs">
+        <span class="material-symbols-outlined text-primary text-[28px]" style="font-variation-settings:'FILL' 1;">description</span>
+        <span class="font-headline-md text-headline-md text-primary tracking-tight">AI Resume</span>
+      </div>
+
+      <!-- Nav links -->
+      <nav class="hidden md:flex items-center gap-lg">
+        <a href="#"      class="font-label-sm text-label-sm text-primary">Home</a>
+        <a href="#steps" class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors">How It Works</a>
+        <a href="preview_auth.html" class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors">Build Now</a>
+      </nav>
+
+      <!-- CTA / Avatar -->
+      <div class="flex items-center gap-md">
+        
+          <a href="#dashboard" class="flex items-center gap-xs font-label-sm text-label-sm text-primary hover:underline">
+            Dashboard
+          </a>
+        
+          <a href="preview_auth.html"
+             class="flex items-center gap-2 bg-primary-container text-on-primary-container px-4 py-2 rounded-full font-label-sm text-label-sm hover:opacity-90 transition-opacity">
+            <span class="material-symbols-outlined text-[16px]">login</span>
+            Sign In
+          </a>
+        
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Main ─────────────────────────────────────────────── -->
+  <main class="w-full pt-16">
+    <div class="flex flex-col w-full relative overflow-hidden">
+
+      <!-- Animated WebGL background -->
+      <div aria-hidden="true" class="absolute inset-0 pointer-events-none opacity-40 z-0 mix-blend-screen">
+        <div class="absolute inset-0 w-full h-full" style="display:block;">
+          <canvas id="shader-canvas" style="display:block;width:100%;height:100%"></canvas>
+          <script>
+          (function() {
+            const canvas = document.getElementById('shader-canvas');
+            function syncSize() {
+              const w = canvas.clientWidth  || 1280;
+              const h = canvas.clientHeight || 720;
+              if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+            }
+            if (typeof ResizeObserver !== 'undefined') new ResizeObserver(syncSize).observe(canvas);
+            syncSize();
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            if (!gl) return;
+            const vs = `attribute vec2 a_position; varying vec2 v_texCoord;
+              void main(){v_texCoord=a_position*0.5+0.5;gl_Position=vec4(a_position,0.0,1.0);}`;
+            const fs = `precision highp float; varying vec2 v_texCoord; uniform float u_time; uniform vec2 u_resolution;
+              void main(){
+                vec2 uv=v_texCoord;
+                float pulse=0.5+0.5*sin(u_time*0.5);
+                vec3 color1=vec3(0.31,0.27,0.90);
+                vec3 color2=vec3(0.02,0.71,0.83);
+                vec3 base=vec3(0.04,0.05,0.08);
+                float glow=smoothstep(0.8,0.2,length(uv-0.5));
+                vec3 finalColor=mix(base,mix(color1,color2,uv.x),glow*0.3*pulse);
+                gl_FragColor=vec4(finalColor,1.0);
+              }`;
+            function cs(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);return s;}
+            const prog=gl.createProgram();
+            gl.attachShader(prog,cs(gl.VERTEX_SHADER,vs));
+            gl.attachShader(prog,cs(gl.FRAGMENT_SHADER,fs));
+            gl.linkProgram(prog); gl.useProgram(prog);
+            const buf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+            gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+            const pos=gl.getAttribLocation(prog,'a_position');
+            gl.enableVertexAttribArray(pos); gl.vertexAttribPointer(pos,2,gl.FLOAT,false,0,0);
+            const uTime=gl.getUniformLocation(prog,'u_time');
+            const uRes=gl.getUniformLocation(prog,'u_resolution');
+            function render(t){
+              if(typeof ResizeObserver==='undefined') syncSize();
+              gl.viewport(0,0,canvas.width,canvas.height);
+              if(uTime) gl.uniform1f(uTime,t*0.001);
+              if(uRes)  gl.uniform2f(uRes,canvas.width,canvas.height);
+              gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+              requestAnimationFrame(render);
+            }
+            render(0);
+          })();
+          </script>
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-b from-background/30 via-background/60 to-background"></div>
+      </div>
+
+      <!-- ── Hero Section ─────────────────────────────────── -->
+      <section class="relative z-10 w-full max-w-[1280px] mx-auto px-margin pt-xl pb-xl flex flex-col lg:flex-row items-center gap-xl min-h-[85vh]">
+
+        <!-- Left copy -->
+        <div class="w-full lg:w-[55%] flex flex-col items-start gap-lg relative">
+          <div class="absolute -top-12 -left-12 w-64 h-64 bg-primary/10 rounded-full blur-3xl mix-blend-screen pointer-events-none"></div>
+
+          <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container/80 backdrop-blur-md shadow-sm">
+            <span class="material-symbols-outlined text-primary text-[18px]">auto_awesome</span>
+            <span class="font-label-sm text-label-sm text-primary tracking-wide uppercase">Grok + Gemini Powered</span>
+          </div>
+
+          <h1 class="font-display text-display text-on-surface leading-[1.05] tracking-[-0.03em] max-w-[18ch]">
+            Turn Your Raw Experience Into a
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Job-Winning</span> Resume.
+          </h1>
+
+          <p class="font-body-lg text-body-lg text-on-surface-variant max-w-[42ch]">
+            Stop staring at a blank page. Our AI analyzes your career history, rewrites bullet points for maximum ATS impact, and formats it instantly in crisp LaTeX.
+          </p>
+
+          <div class="flex flex-col sm:flex-row items-start sm:items-center gap-md mt-sm">
+            <!-- Google Sign-In Button -->
+            <a href="preview_auth.html"
+               class="group relative flex items-center justify-center gap-3 bg-on-surface text-surface px-8 py-4 rounded-full font-label-sm text-label-sm transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-xl overflow-hidden">
+              <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out"></div>
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              </svg>
+              <span class="tracking-wide">Continue with Google</span>
+            </a>
+
+            <div class="flex items-center gap-2 text-on-surface-variant">
+              <div class="flex -space-x-2">
+                <div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center shadow-sm">
+                  <span class="material-symbols-outlined text-[16px] text-tertiary">check_circle</span>
+                </div>
+                <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center shadow-sm z-10">
+                  <span class="material-symbols-outlined text-[16px] text-primary">auto_fix_high</span>
+                </div>
+              </div>
+              <span class="font-label-sm text-label-sm">No credit card required</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right — Resume preview card -->
+        <div class="w-full lg:w-[45%] relative h-[600px] hidden md:flex items-center justify-center perspective-1000">
+          <div class="resume-card rotate-y-neg10 w-[400px] h-[550px] bg-surface-container/60 backdrop-blur-2xl rounded-xl shadow-2xl p-6 flex flex-col gap-4 overflow-hidden border border-outline-variant/20 relative">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-3xl rounded-full"></div>
+
+            <!-- Card header -->
+            <div class="w-full flex justify-between items-start border-b border-outline-variant/30 pb-4">
+              <div>
+                <div class="w-32 h-4 bg-on-surface rounded animate-pulse opacity-80 mb-2"></div>
+                <div class="w-48 h-3 bg-on-surface-variant rounded animate-pulse opacity-60"></div>
+              </div>
+              <div class="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined text-[20px]">description</span>
+              </div>
+            </div>
+
+            <!-- Skeleton content -->
+            <div class="flex flex-col gap-3 mt-2">
+              <div class="w-24 h-3 bg-primary rounded animate-pulse opacity-70"></div>
+              <div class="w-full h-16 bg-surface-variant/50 rounded flex flex-col justify-center px-3 gap-2">
+                <div class="w-[90%] h-2 bg-on-surface-variant rounded opacity-50"></div>
+                <div class="w-[75%] h-2 bg-on-surface-variant rounded opacity-50"></div>
+              </div>
+              <div class="w-24 h-3 bg-secondary rounded animate-pulse opacity-70 mt-2"></div>
+              <div class="w-full h-16 bg-surface-variant/50 rounded flex flex-col justify-center px-3 gap-2">
+                <div class="w-[85%] h-2 bg-on-surface-variant rounded opacity-50"></div>
+                <div class="w-[80%] h-2 bg-on-surface-variant rounded opacity-50"></div>
+              </div>
+            </div>
+
+            <!-- Card footer -->
+            <div class="mt-auto pt-4 border-t border-outline-variant/30 flex justify-between items-center">
+              <div class="w-16 h-3 bg-secondary-container rounded animate-pulse opacity-80"></div>
+              <div class="flex gap-2">
+                <div class="w-8 h-4 bg-tertiary-container rounded"></div>
+                <div class="w-8 h-4 bg-tertiary-container rounded"></div>
+              </div>
+            </div>
+
+            <!-- ATS Score badge -->
+            <div class="absolute -right-4 bottom-24 bg-surface shadow-xl rounded-lg p-3 flex items-center gap-3 animate-bounce" style="animation-duration:4s;">
+              <span class="material-symbols-outlined text-primary text-[24px]">verified</span>
+              <div>
+                <div class="text-label-sm font-label-sm text-on-surface">ATS Score: 98%</div>
+                <div class="text-[10px] text-on-surface-variant">Ready for download</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── How It Works ──────────────────────────────────── -->
+      <section id="steps" class="w-full bg-surface-container-lowest py-xl relative z-10">
+        <div class="max-w-[1280px] mx-auto px-margin">
+          <div class="flex flex-col items-center text-center mb-xl">
+            <h2 class="font-headline-lg text-headline-lg text-on-surface mb-4">The exact opposite of a generic template.</h2>
+            <p class="font-body-md text-body-md text-on-surface-variant max-w-[60ch]">
+              Three steps to a document that demands attention. We handle the formatting, keyword optimization, and layout logic.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-lg relative">
+            <!-- Connector line -->
+            <div class="hidden md:block absolute top-8 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-outline-variant/30 to-transparent z-0"></div>
+
+            <!-- Step 1 -->
+            <div class="relative z-10 flex flex-col items-center text-center group">
+              <div class="w-16 h-16 rounded-full bg-surface shadow-md flex items-center justify-center mb-6 relative overflow-hidden transition-transform group-hover:-translate-y-1">
+                <div class="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <span class="material-symbols-outlined text-[28px] text-primary relative z-10">draw</span>
+              </div>
+              <div class="text-primary font-label-sm text-label-sm mb-2 tracking-widest uppercase">Step 01</div>
+              <h3 class="font-headline-md text-headline-md text-on-surface mb-3">Input Raw Data</h3>
+              <p class="font-body-md text-body-md text-on-surface-variant">
+                Paste your messy notes, old resume, or fill out our guided intake form. No formatting required.
+              </p>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="relative z-10 flex flex-col items-center text-center group">
+              <div class="w-16 h-16 rounded-full bg-surface shadow-md flex items-center justify-center mb-6 relative overflow-hidden transition-transform group-hover:-translate-y-1">
+                <div class="absolute inset-0 bg-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <span class="material-symbols-outlined text-[28px] text-secondary relative z-10">model_training</span>
+              </div>
+              <div class="text-secondary font-label-sm text-label-sm mb-2 tracking-widest uppercase">Step 02</div>
+              <h3 class="font-headline-md text-headline-md text-on-surface mb-3">AI Rewrites &amp; Optimizes</h3>
+              <p class="font-body-md text-body-md text-on-surface-variant">
+                Grok rewrites your bullets for action, impact, and ATS readability — with Gemini as silent fallback.
+              </p>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="relative z-10 flex flex-col items-center text-center group">
+              <div class="w-16 h-16 rounded-full bg-surface shadow-md flex items-center justify-center mb-6 relative overflow-hidden transition-transform group-hover:-translate-y-1">
+                <div class="absolute inset-0 bg-tertiary/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <span class="material-symbols-outlined text-[28px] text-tertiary relative z-10">download</span>
+              </div>
+              <div class="text-tertiary font-label-sm text-label-sm mb-2 tracking-widest uppercase">Step 03</div>
+              <h3 class="font-headline-md text-headline-md text-on-surface mb-3">Export to PDF</h3>
+              <p class="font-body-md text-body-md text-on-surface-variant">
+                Instantly render a pixel-perfect, typography-driven PDF powered by professional LaTeX engines.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ── Footer ─────────────────────────────────────────── -->
+  <footer class="w-full bg-surface-container-lowest py-xl border-t border-outline-variant/10">
+    <div class="max-w-[1280px] mx-auto px-margin text-center text-on-surface-variant font-label-sm text-label-sm">
+      © 2026 AI Resume Builder — Abdul Mujahid · MSU Denver CS · Engineered for precision.
+    </div>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,1657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATS Optimizer — ResumeAI</title>
+<meta name="description" content="Overleaf-style AI ATS Resume Optimizer. Analyze match score, missing keywords, and chat with AI to complete and optimize your resume.">
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+          serif: ['Newsreader', 'Georgia', 'serif'],
+          mono: ['JetBrains Mono', 'Menlo', 'monospace']
+        },
+        colors: {
+          claude: {
+            bg: '#FAF9F6', sidebar: '#FBF9F7', panel: '#FFFFFF',
+            border: '#E8E5DF', 'border-subtle': '#EFECE6',
+            coral: '#D97757', 'coral-light': '#FBF0EB',
+            text: '#1F1E1D', secondary: '#666461', muted: '#8F8C86', hover: '#F2EFEB'
+          }
+        }
+      }
+    }
+  };
+</script>
+<style>
+@layer base {
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #FAF9F6;
+    color: #1F1E1D;
+  }
+}
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D9D5CF; border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: #BDB9B2; }
+
+/* Overleaf-style top toolbar (Light theme) */
+.toolbar {
+  background: #FFFFFF;
+  border-bottom: 1px solid #E8E5DF;
+}
+
+/* Nav styles */
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  color: #666461;
+  transition: background .14s, color .14s;
+  text-decoration: none;
+}
+.nav-link:hover {
+  background: #F0ECE6;
+  color: #1F1E1D;
+}
+.nav-active {
+  background: #EDE8E1 !important;
+  color: #1F1E1D !important;
+  font-weight: 500;
+}
+.qa-btn {
+  transition: background .14s, transform .12s;
+}
+.qa-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Panels */
+.lp {
+  background: #FBF9F7;
+  border-right: 1px solid #E8E5DF;
+}
+.lp-section {
+  border-bottom: 1px solid #EFECE6;
+  padding: 12px 14px;
+}
+.lp-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: #8F8C86;
+  margin-bottom: 8px;
+}
+
+/* Center Panel / Chat */
+.cp {
+  background: #FAF9F6;
+}
+.chat-user {
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+  color: #FFFFFF;
+  border-radius: 16px 16px 4px 16px;
+  align-self: flex-end;
+  max-width: 82%;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.18);
+}
+.chat-ai {
+  background: #FFFFFF;
+  color: #1F1E1D;
+  border: 1px solid #E8E5DF;
+  border-radius: 16px 16px 16px 4px;
+  align-self: flex-start;
+  max-width: 88%;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+.chat-bubble {
+  padding: 11px 15px;
+  font-size: 13px;
+  line-height: 1.62;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+.chat-thinking span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #7c3aed;
+  animation: bounce .9s infinite;
+}
+.chat-thinking span:nth-child(2) { animation-delay: .15s; }
+.chat-thinking span:nth-child(3) { animation-delay: .3s; }
+@keyframes bounce { 0%,60%,100%{transform:translateY(0);} 30%{transform:translateY(-6px);} }
+
+/* Right Panel (Report / PDF Preview) */
+.rp {
+  background: #F8F7F4;
+  border-left: 1px solid #E8E5DF;
+}
+
+/* Score Ring */
+.score-ring { transform: rotate(-90deg); }
+.score-ring-track { stroke: #EFECE6; stroke-width: 8; fill: none; }
+.score-ring-fill {
+  stroke-width: 8;
+  fill: none;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1.2s cubic-bezier(.4, 0, .2, 1);
+}
+
+/* Keyword chips (Warm light theme) */
+.chip-match {
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  color: #047857;
+}
+.chip-miss {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #B91C1C;
+  transition: transform .1s, background .12s;
+}
+.chip-miss:hover {
+  background: #FEE2E2;
+  transform: translateY(-1px);
+}
+.chip-warn {
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  color: #B45309;
+}
+
+/* Section Progress Bar */
+.sec-bar-track {
+  background: #EFECE6;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+.sec-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 1s cubic-bezier(.4, 0, .2, 1);
+}
+
+/* Inputs (Clean Light) */
+.light-input {
+  background: #FFFFFF;
+  border: 1px solid #E8E5DF;
+  color: #1F1E1D;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color .18s, box-shadow .18s;
+  width: 100%;
+}
+.light-input:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+.light-input::placeholder {
+  color: #8F8C86;
+}
+
+/* Chat textarea */
+.chat-ta {
+  background: #FFFFFF;
+  border: 1px solid #E8E5DF;
+  color: #1F1E1D;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  resize: none;
+  padding: 10px 48px 10px 14px;
+  width: 100%;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  transition: border-color .18s, box-shadow .18s;
+}
+.chat-ta:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+}
+.chat-ta::placeholder {
+  color: #8F8C86;
+}
+
+/* Grade badges */
+.grade-A { background: #ECFDF5; color: #047857; border: 1px solid #A7F3D0; }
+.grade-B { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
+.grade-C { background: #FFFBEB; color: #B45309; border: 1px solid #FDE68A; }
+.grade-D { background: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA; }
+
+/* Overleaf-style green compile/analyze button */
+.btn-overleaf {
+  background: #059669;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 1px 3px rgba(5, 150, 105, 0.25);
+  transition: background .16s, transform .12s;
+}
+.btn-overleaf:hover {
+  background: #047857;
+}
+.btn-overleaf:active {
+  transform: scale(.98);
+}
+.btn-overleaf:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+/* Prompt chips */
+.prompt-chip {
+  background: #FFFFFF;
+  border: 1px solid #E8E5DF;
+  color: #666461;
+  font-size: 11.5px;
+  padding: 5px 10px;
+  border-radius: 9999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .14s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.prompt-chip:hover {
+  border-color: #7c3aed;
+  color: #7c3aed;
+  background: #F5F3FF;
+}
+
+/* Paper resume preview */
+.paper-sheet {
+  background: #FFFFFF;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+  border: 1px solid #E8E5DF;
+  border-radius: 6px;
+  width: 100%;
+  max-width: 620px;
+  padding: 36px 40px;
+  color: #111827;
+  font-family: 'Newsreader', Georgia, serif;
+  line-height: 1.5;
+}
+.paper-name { font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
+.paper-contact { font-size: 10px; color: #4B5563; font-family: 'Inter', sans-serif; }
+.paper-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  border-bottom: 1.5px solid #1F2937;
+  padding-bottom: 2px;
+  margin: 12px 0 6px;
+  font-family: 'Inter', sans-serif;
+}
+.paper-text { font-size: 11px; font-family: 'Inter', sans-serif; color: #374151; }
+
+@keyframes fadein { from{opacity:0;transform:translateY(3px);} to{opacity:1;transform:none;} }
+.msg-anim { animation: fadein .2s ease; }
+</style>
+</head>
+<body class="font-sans antialiased overflow-hidden flex h-screen bg-[#FAF9F6] text-[#1F1E1D]">
+
+<!-- ══════════════════════════════════════════════════════════════
+     LAYOUT: [Sidebar] [Left Project/Inputs] [Center Chat/Code] [Right PDF/ATS]
+══════════════════════════════════════════════════════════════ -->
+
+<!-- ═══ APP NAV SIDEBAR (Exact light theme as Dashboard & AI Editor) ═══ -->
+<aside id="sidebar" class="w-[240px] flex-shrink-0 bg-[#FBF9F7] border-r border-[#E8E5DF] flex flex-col h-full z-30 select-none">
+  <div class="flex flex-col h-full overflow-hidden">
+    <!-- Logo -->
+    <div class="h-14 px-4 flex items-center border-b border-[#EFECE6]">
+      <a href="/resume/dashboard" class="flex items-center gap-2.5">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="ResumeAI Logo" class="w-7 h-7 object-contain">
+        <span class="font-serif text-[1.1rem] font-medium text-[#1F1E1D]">ResumeAI</span>
+      </a>
+    </div>
+
+    <!-- Nav links -->
+    <div class="px-2.5 pt-3 pb-2 flex flex-col gap-0.5">
+      <a href="/resume/dashboard" class="nav-link">
+        <span class="material-symbols-outlined text-[19px] text-[#666461]">dashboard</span>
+        <span>Dashboard</span>
+      </a>
+      <a href="/resume/library" class="nav-link">
+        <span class="material-symbols-outlined text-[19px] text-[#666461]">description</span>
+        <span>Resume</span>
+      </a>
+      <a href="/resume/editor" class="nav-link">
+        <div class="flex items-center gap-2.5 flex-1">
+          <span class="material-symbols-outlined text-[19px] text-[#666461]">auto_fix_high</span>
+          <span>AI Editor</span>
+        </div>
+        <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-[#E4EBF7] text-[#2C6ECB]">AI</span>
+      </a>
+      <a href="/resume/ats-optimizer" class="nav-link nav-active">
+        <div class="flex items-center gap-2.5 flex-1">
+          <span class="material-symbols-outlined text-[19px] text-[#059669]">check_circle</span>
+          <span>ATS Optimizer</span>
+        </div>
+        <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0]">Pro</span>
+      </a>
+    </div>
+
+    <div class="mx-3 border-t border-[#EFECE6] mt-1"></div>
+
+    <!-- Quick Actions -->
+    <div class="px-2.5 pt-3 pb-1">
+      <div class="px-2 mb-2 text-[11px] font-semibold uppercase tracking-widest text-[#8F8C86]">Quick Actions</div>
+      <div class="grid grid-cols-2 gap-1.5">
+        <a href="/resume/editor" class="qa-btn flex flex-col items-center gap-1 py-2.5 rounded-xl text-center border border-[#EFECE6] bg-white hover:bg-[#F5F3FF] hover:border-[#c4b5fd]">
+          <span class="material-symbols-outlined text-[19px]" style="color:#7c3aed;font-variation-settings:'FILL' 1">add_circle</span>
+          <span class="text-[10.5px] font-medium text-[#1F1E1D]">New Resume</span>
+        </a>
+        <a href="/resume/editor" class="qa-btn flex flex-col items-center gap-1 py-2.5 rounded-xl text-center border border-[#EFECE6] bg-white hover:bg-[#ECFEFF] hover:border-[#67e8f9]">
+          <span class="material-symbols-outlined text-[19px]" style="color:#06b6d4;font-variation-settings:'FILL' 1">auto_fix_high</span>
+          <span class="text-[10.5px] font-medium text-[#1F1E1D]">AI Editor</span>
+        </a>
+        <a href="/resume/ats-optimizer" class="qa-btn flex flex-col items-center gap-1 py-2.5 rounded-xl text-center border border-[#A7F3D0] bg-[#ECFDF5]">
+          <span class="material-symbols-outlined text-[19px]" style="color:#059669;font-variation-settings:'FILL' 1">check_circle</span>
+          <span class="text-[10.5px] font-medium text-[#047857]">ATS Check</span>
+        </a>
+        <a href="/resume/library" class="qa-btn flex flex-col items-center gap-1 py-2.5 rounded-xl text-center border border-[#EFECE6] bg-white hover:bg-[#FFF7ED] hover:border-[#fdba74]">
+          <span class="material-symbols-outlined text-[19px]" style="color:#D97757;font-variation-settings:'FILL' 1">folder_open</span>
+          <span class="text-[10.5px] font-medium text-[#1F1E1D]">My Resumes</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="flex-1"></div>
+
+    <!-- User Profile Footer -->
+    <div class="p-2.5 border-t border-[#E8E5DF]">
+      <div class="flex items-center justify-between px-1">
+        <div class="flex items-center gap-2">
+          <span class="w-6 h-6 rounded-full text-white text-[11px] font-semibold flex items-center justify-center" style="background:linear-gradient(135deg,#7c3aed,#06b6d4)">{{ user.first_name[0]|upper if user and user.first_name else 'U' }}</span>
+          <span class="text-[13px] text-[#1F1E1D] font-medium">{{ user.first_name if user and user.first_name else 'User' }}</span>
+        </div>
+        <div class="flex items-center gap-1 text-[#8F8C86]">
+          <a href="/auth/logout" class="p-1 hover:text-[#1F1E1D] rounded transition-colors" title="Sign out">
+            <span class="material-symbols-outlined text-[17px]">logout</span>
+          </a>
+          <button id="toggle-sidebar-btn" class="p-1 hover:text-[#1F1E1D] rounded transition-colors" title="Hide Sidebar">
+            <span class="material-symbols-outlined text-[17px]">dock_to_left</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN WORKSPACE: OVERLEAF 3-PANEL SUITE
+═══════════════════════════════════════════════════════════ -->
+<div class="flex-1 flex flex-col h-full overflow-hidden">
+
+  <!-- ── Overleaf-Style Top Toolbar (Light Theme) ── -->
+  <header class="toolbar h-13 flex items-center justify-between px-4 flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <button id="hamburger-btn" class="p-1.5 rounded-lg hover:bg-[#F0ECE6] transition-colors text-[#666461]" title="Toggle Menu">
+        <span class="material-symbols-outlined text-[20px]">menu</span>
+      </button>
+
+      <!-- Project title & Overleaf badge -->
+      <div class="flex items-center gap-2.5">
+        <div class="w-6 h-6 rounded-md flex items-center justify-center bg-[#ECFDF5] border border-[#A7F3D0]">
+          <span class="material-symbols-outlined text-[15px] text-[#059669]" style="font-variation-settings:'FILL' 1">check_circle</span>
+        </div>
+        <span class="text-[14px] font-semibold text-[#1F1E1D]">ATS Optimizer</span>
+        <span class="text-[11px] font-medium px-2 py-0.5 rounded-md bg-[#F4F2EE] text-[#666461] border border-[#E8E5DF] hidden sm:inline-flex items-center gap-1">
+          <span class="material-symbols-outlined text-[12px] text-[#7c3aed]">auto_awesome</span> Overleaf-Mode
+        </span>
+      </div>
+    </div>
+
+    <!-- Center/Right Toolbar Actions -->
+    <div class="flex items-center gap-2.5">
+      <!-- Status pill -->
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-medium bg-[#FBF9F7] border border-[#E8E5DF] text-[#666461]">
+        <span class="w-2 h-2 rounded-full" id="status-dot" style="background:#10b981;"></span>
+        <span id="status-text">Ready to optimize</span>
+      </div>
+
+      <!-- Overleaf Green "Recompile & Analyze" Button -->
+      <button id="analyze-btn" class="btn-overleaf" onclick="runAnalysis()">
+        <span class="material-symbols-outlined text-[17px]" style="font-variation-settings:'FILL' 1">play_arrow</span>
+        <span>Recompile & Analyze</span>
+      </button>
+
+      <!-- View Switcher -->
+      <div class="hidden md:flex items-center p-0.5 rounded-lg bg-[#F0ECE6] border border-[#E8E5DF]">
+        <button onclick="setViewMode('all')" id="btn-view-all" class="px-2 py-1 text-[11px] font-medium rounded bg-white text-[#1F1E1D] shadow-xs" title="Split 3-way">Split</button>
+        <button onclick="setViewMode('chat')" id="btn-view-chat" class="px-2 py-1 text-[11px] font-medium rounded text-[#666461] hover:text-[#1F1E1D]" title="Focus AI Chat">Chat</button>
+        <button onclick="setViewMode('preview')" id="btn-view-prev" class="px-2 py-1 text-[11px] font-medium rounded text-[#666461] hover:text-[#1F1E1D]" title="Focus PDF/Score">Report</button>
+      </div>
+    </div>
+  </header>
+
+
+  <!-- ── Three-Panel Workspace Body ── -->
+  <div class="flex-1 flex overflow-hidden">
+
+    <!-- ══════════════════════════════════════════════════
+         LEFT PANEL — Overleaf Project Files & Input Specs
+    ══════════════════════════════════════════════════ -->
+    <div id="panel-left" class="lp w-[290px] flex-shrink-0 flex flex-col overflow-hidden">
+
+      <!-- Overleaf File Tree -->
+      <div class="lp-section">
+        <div class="lp-title flex items-center justify-between">
+          <span>Project Files</span>
+          <span class="material-symbols-outlined text-[15px] text-[#8F8C86]">folder_open</span>
+        </div>
+        <div class="flex flex-col gap-1 text-[12.5px]">
+          <div class="flex items-center gap-2 px-2 py-1.5 rounded-md bg-[#EDE8E1] text-[#1F1E1D] font-medium cursor-pointer">
+            <span class="material-symbols-outlined text-[16px] text-[#7c3aed]">article</span>
+            <span>resume.tex</span>
+            <span class="ml-auto text-[10px] text-[#8F8C86]">main</span>
+          </div>
+          <div class="flex items-center gap-2 px-2 py-1.5 rounded-md text-[#666461] hover:bg-[#F0ECE6] cursor-pointer">
+            <span class="material-symbols-outlined text-[16px] text-[#059669]">description</span>
+            <span>job_description.txt</span>
+          </div>
+          <div class="flex items-center gap-2 px-2 py-1.5 rounded-md text-[#666461] hover:bg-[#F0ECE6] cursor-pointer">
+            <span class="material-symbols-outlined text-[16px] text-[#D97757]">data_object</span>
+            <span>ats_keywords.json</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Select Existing Resume -->
+      <div class="lp-section">
+        <div class="lp-title">Select Resume</div>
+        <select id="resume-select" class="light-input px-2.5 py-1.5 text-[12.5px]" onchange="loadResume(this.value)">
+          <option value="">— Paste or load existing —</option>
+          {% for r in resumes %}
+          <option value="{{ r.id }}" {% if selected_resume and selected_resume.id == r.id %}selected{% endif %}>
+            {{ r.title }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Resume Text -->
+      <div class="lp-section flex-shrink-0">
+        <div class="lp-title flex items-center justify-between">
+          <span>Resume Text</span>
+          <span class="text-[10px] normal-case text-[#8F8C86]">Editable source</span>
+        </div>
+        <textarea id="resume-input" class="light-input font-mono text-[11.5px] p-2.5" rows="7"
+                  placeholder="Paste your resume text here…&#10;Or select a resume above."
+                  style="line-height:1.55;"></textarea>
+      </div>
+
+      <!-- Target Job Description -->
+      <div class="lp-section flex-1 flex flex-col min-h-0">
+        <div class="lp-title flex items-center justify-between">
+          <span>Target Job Description</span>
+          <span class="text-[10px] font-normal normal-case text-[#059669]">Required ✓</span>
+        </div>
+
+        <!-- Job Presets for 1-click test -->
+        <div class="flex items-center gap-1 mb-2 overflow-x-auto pb-1">
+          <span class="text-[10px] text-[#8F8C86] uppercase font-semibold mr-1 flex-shrink-0">Presets:</span>
+          <button type="button" onclick="loadJobPreset('fullstack')" class="text-[10.5px] px-2 py-0.5 rounded bg-white border border-[#E8E5DF] text-[#666461] hover:border-[#7c3aed] hover:text-[#7c3aed] flex-shrink-0">Fullstack</button>
+          <button type="button" onclick="loadJobPreset('ai')" class="text-[10.5px] px-2 py-0.5 rounded bg-white border border-[#E8E5DF] text-[#666461] hover:border-[#7c3aed] hover:text-[#7c3aed] flex-shrink-0">AI/ML</button>
+          <button type="button" onclick="loadJobPreset('pm')" class="text-[10.5px] px-2 py-0.5 rounded bg-white border border-[#E8E5DF] text-[#666461] hover:border-[#7c3aed] hover:text-[#7c3aed] flex-shrink-0">Product</button>
+        </div>
+
+        <textarea id="jd-input" class="light-input flex-1 min-h-0 font-mono text-[11.5px] p-2.5"
+                  placeholder="Paste target job description here…&#10;&#10;e.g. Seeking Senior Software Engineer with 4+ years Python, React, Docker, Kubernetes, AWS, and CI/CD pipelines..."
+                  style="line-height:1.55;height:100%;"></textarea>
+      </div>
+
+      <!-- Bottom Run Button -->
+      <div class="p-3 border-t border-[#E8E5DF] bg-[#FBF9F7]">
+        <button class="btn-overleaf w-full justify-center" onclick="runAnalysis()" id="analyze-btn-2">
+          <span class="material-symbols-outlined text-[17px]" style="font-variation-settings:'FILL' 1">analytics</span>
+          Run ATS Analysis
+        </button>
+      </div>
+    </div>
+
+
+    <!-- ══════════════════════════════════════════════════
+         CENTER PANEL — Overleaf Editor: Chat with AI to complete code
+    ══════════════════════════════════════════════════ -->
+    <div id="panel-center" class="cp flex-1 flex flex-col min-w-0">
+
+      <!-- Editor Header & Tabs -->
+      <div class="flex items-center px-4 flex-shrink-0 bg-[#FFFFFF] border-b border-[#E8E5DF] h-11">
+        <div class="flex items-center gap-2">
+          <button id="tab-chat-btn" onclick="switchCenterTab('chat')" class="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-semibold text-[#1F1E1D] border-b-2 border-[#7c3aed]">
+            <span class="material-symbols-outlined text-[16px] text-[#7c3aed]">smart_toy</span>
+            <span>AI Chat Copilot</span>
+          </button>
+          <button id="tab-code-btn" onclick="switchCenterTab('code')" class="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-[#666461] hover:text-[#1F1E1D]">
+            <span class="material-symbols-outlined text-[16px]">code</span>
+            <span>LaTeX Source (main.tex)</span>
+          </button>
+        </div>
+
+        <div class="flex-1"></div>
+
+        <div class="flex items-center gap-2 text-[11.5px] text-[#8F8C86]">
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#F5F3FF] text-[#7c3aed] font-medium border border-[#DDD6FE]">
+            <span class="material-symbols-outlined text-[13px]">auto_awesome</span>
+            AI Code Engine
+          </span>
+        </div>
+      </div>
+
+      <!-- Tab 1: AI Chat View (default) -->
+      <div id="center-chat-view" class="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <!-- Action prompt chips -->
+        <div class="px-4 py-2 border-b border-[#EFECE6] bg-[#FFFFFF] flex items-center gap-1.5 overflow-x-auto">
+          <span class="text-[11px] font-semibold uppercase tracking-wider text-[#8F8C86] mr-1 flex-shrink-0">Quick Prompts:</span>
+          <button class="prompt-chip" onclick="quickPrompt('Rewrite my professional summary to 95%+ match this job')">
+            <span>📝 Rewrite Summary</span>
+          </button>
+          <button class="prompt-chip" onclick="quickPrompt('Rewrite my experience bullets with strong action verbs & quantified metrics')">
+            <span>⚡ Add Metrics & Impact</span>
+          </button>
+          <button class="prompt-chip" onclick="quickPrompt('What are the top missing keywords and how should I insert them?')">
+            <span>🎯 Add Missing Keywords</span>
+          </button>
+          <button class="prompt-chip" onclick="quickPrompt('Convert my resume into clean LaTeX code ready for Overleaf')">
+            <span>📄 Generate LaTeX Code</span>
+          </button>
+        </div>
+
+        <!-- Chat Messages Scroll Container -->
+        <div class="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-3.5" id="chat-messages">
+          <!-- Welcome message -->
+          <div class="chat-bubble chat-ai msg-anim">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-6 h-6 rounded-md flex items-center justify-center bg-gradient-to-br from-[#7c3aed] to-[#06b6d4]">
+                <span class="material-symbols-outlined text-white text-[13px]" style="font-variation-settings:'FILL' 1">auto_awesome</span>
+              </div>
+              <span class="text-[12px] font-semibold text-[#7c3aed]">ATS AI Copilot</span>
+              <span class="text-[10px] text-[#8F8C86]">Overleaf Integration</span>
+            </div>
+            👋 Welcome to your <strong>Overleaf-style ATS Optimizer</strong>! Instead of manually rewriting code, chat with me to complete and optimize your resume:
+            <br><br>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 my-1 text-[12px]">
+              <div class="p-2 rounded-lg bg-[#FAF9F6] border border-[#EFECE6]">
+                <strong>1. Select / Paste</strong> your resume & target job description in the left panel.
+              </div>
+              <div class="p-2 rounded-lg bg-[#FAF9F6] border border-[#EFECE6]">
+                <strong>2. Click Recompile & Analyze</strong> to get your instant score & missing keywords.
+              </div>
+            </div>
+            <div class="mt-2 text-[12.5px] text-[#4B5563]">
+              Ask me to optimize bullets, insert missing skills, or generate clean LaTeX code anytime!
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Input Bar -->
+        <div class="px-4 py-3 border-t border-[#E8E5DF] bg-[#FFFFFF]">
+          <div class="relative">
+            <textarea id="chat-input" rows="2" class="chat-ta"
+                      placeholder="Chat with AI to optimize resume or write code… (Enter to send, Shift+Enter for new line)"
+                      onkeydown="handleKey(event)"></textarea>
+            <button onclick="sendChat()" id="send-btn"
+                    class="absolute right-2.5 bottom-2.5 w-8 h-8 rounded-lg flex items-center justify-center text-white transition-all hover:opacity-90 shadow-xs"
+                    style="background:linear-gradient(135deg,#7c3aed,#06b6d4);" title="Send Message">
+              <span class="material-symbols-outlined text-[16px]" style="font-variation-settings:'FILL' 1">send</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: LaTeX Code View -->
+      <div id="center-code-view" class="flex-1 flex flex-col min-h-0 overflow-hidden hidden bg-[#FFFFFF]">
+        <div class="px-4 py-2 border-b border-[#E8E5DF] bg-[#FBF9F7] flex items-center justify-between">
+          <div class="flex items-center gap-2 text-[12px] font-mono text-[#666461]">
+            <span class="material-symbols-outlined text-[16px] text-[#7c3aed]">code</span>
+            <span>main.tex</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-[#EDE8E1] text-[#1F1E1D]">LaTeX 2e</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="copyLatexCode()" class="px-2.5 py-1 text-[11.5px] font-medium rounded-md border border-[#E8E5DF] bg-white hover:bg-[#F5F3FF] text-[#1F1E1D] flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">content_copy</span> Copy
+            </button>
+            <button onclick="downloadLatexFile()" class="px-2.5 py-1 text-[11.5px] font-medium rounded-md border border-[#E8E5DF] bg-white hover:bg-[#F5F3FF] text-[#1F1E1D] flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">download</span> .tex
+            </button>
+          </div>
+        </div>
+        <div class="flex-1 p-4 overflow-y-auto">
+          <textarea id="latex-editor" class="w-full h-full font-mono text-[12px] p-3 rounded-lg border border-[#E8E5DF] bg-[#FBF9F7] text-[#1F1E1D] outline-none" style="line-height:1.6;"></textarea>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- ══════════════════════════════════════════════════
+         RIGHT PANEL — Overleaf PDF Preview & ATS Inspector
+    ══════════════════════════════════════════════════ -->
+    <div id="panel-right" class="rp w-[370px] flex-shrink-0 flex flex-col overflow-hidden" style="min-width:320px;">
+
+      <!-- Right Panel Header (Tabs: Report vs Live Preview) -->
+      <div class="flex items-center justify-between px-3 flex-shrink-0 bg-[#FFFFFF] border-b border-[#E8E5DF] h-11">
+        <div class="flex items-center gap-1 bg-[#F0ECE6] p-0.5 rounded-lg">
+          <button id="rp-tab-report" onclick="switchRightTab('report')" class="px-2.5 py-1 text-[12px] font-semibold rounded bg-white text-[#1F1E1D] shadow-xs">
+            ATS Score
+          </button>
+          <button id="rp-tab-pdf" onclick="switchRightTab('pdf')" class="px-2.5 py-1 text-[12px] font-medium rounded text-[#666461] hover:text-[#1F1E1D]">
+            PDF Preview
+          </button>
+        </div>
+
+        <div class="flex items-center gap-1 text-[#666461]">
+          <button class="p-1 rounded hover:text-[#1F1E1D] hover:bg-[#F0ECE6] transition-colors" title="Download Report" onclick="downloadReport()">
+            <span class="material-symbols-outlined text-[17px]">download</span>
+          </button>
+          <button class="p-1 rounded hover:text-[#1F1E1D] hover:bg-[#F0ECE6] transition-colors" title="Re-Analyze" onclick="runAnalysis()">
+            <span class="material-symbols-outlined text-[17px]">refresh</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Panel Content Container -->
+      <div class="flex-1 overflow-y-auto p-4" id="report-panel">
+
+        <!-- ── TAB 1: ATS SCORE & REPORT ── -->
+        <div id="view-report-tab" class="flex flex-col gap-3.5">
+
+          <!-- Placeholder before initial analysis -->
+          <div id="report-placeholder" class="flex flex-col items-center justify-center py-12 text-center">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-3 bg-[#ECFDF5] border border-[#A7F3D0]">
+              <span class="material-symbols-outlined text-[28px] text-[#059669]" style="font-variation-settings:'FILL' 1">analytics</span>
+            </div>
+            <p class="text-[13.5px] font-semibold text-[#1F1E1D] mb-1">Ready for Analysis</p>
+            <p class="text-[12px] text-[#8F8C86] max-w-[200px] leading-relaxed">
+              Click <strong class="text-[#059669]">Recompile & Analyze</strong> above to score your resume against the job description.
+            </p>
+          </div>
+
+          <!-- Loading state -->
+          <div id="report-loading" style="display:none;" class="flex flex-col items-center justify-center py-16 text-center">
+            <div class="w-12 h-12 rounded-full border-4 border-[#E8E5DF] border-t-[#7c3aed] animate-spin mb-3"></div>
+            <p class="text-[13px] font-medium text-[#1F1E1D]">Compiling ATS Match Analysis…</p>
+            <p class="text-[11px] text-[#8F8C86] mt-1">Scanning keywords, bullet impact & structure</p>
+          </div>
+
+          <!-- Analysis Results (populated by JS) -->
+          <div id="report-content" style="display:none;" class="flex flex-col gap-3.5">
+
+            <!-- Score Ring Card -->
+            <div class="flex items-center gap-4 p-4 rounded-xl bg-white border border-[#E8E5DF] shadow-xs" id="score-card">
+              <div class="relative flex-shrink-0">
+                <svg width="86" height="86" viewBox="0 0 88 88">
+                  <circle class="score-ring-track" cx="44" cy="44" r="36"/>
+                  <circle class="score-ring-fill" cx="44" cy="44" r="36" id="score-ring-fill"
+                          style="stroke-dasharray:226;stroke-dashoffset:226;stroke:#10b981;"
+                          transform="rotate(-90 44 44)"/>
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                  <span class="text-[22px] font-bold text-[#1F1E1D] leading-none" id="score-num">0</span>
+                  <span class="text-[9px] font-semibold uppercase tracking-wider text-[#8F8C86]">/ 100</span>
+                </div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-[14px] font-bold text-[#1F1E1D]">ATS Score</span>
+                  <span id="grade-badge" class="text-[11px] font-bold px-2 py-0.5 rounded-full grade-A">A+</span>
+                </div>
+                <p class="text-[12px] text-[#666461] truncate" id="score-subtitle">High Compatibility</p>
+                <div class="mt-2 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full" id="score-indicator" style="background:#10b981;"></span>
+                  <span class="text-[11px] text-[#8F8C86]" id="score-label">Optimized for ATS Filters</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section Scores Breakdown -->
+            <div class="rounded-xl p-4 bg-white border border-[#E8E5DF] shadow-xs">
+              <div class="text-[11px] font-semibold uppercase tracking-wider text-[#8F8C86] mb-3">Section Breakdown</div>
+              <div class="flex flex-col gap-2.5" id="section-scores"></div>
+            </div>
+
+            <!-- Matched Keywords -->
+            <div class="rounded-xl p-4 bg-white border border-[#E8E5DF] shadow-xs">
+              <div class="flex items-center justify-between mb-2.5">
+                <div class="text-[11px] font-semibold uppercase tracking-wider text-[#8F8C86]">Matched Keywords</div>
+                <span class="text-[11px] font-bold text-[#059669]" id="match-count">0</span>
+              </div>
+              <div class="flex flex-wrap gap-1.5" id="matched-keywords"></div>
+            </div>
+
+            <!-- Missing Keywords -->
+            <div class="rounded-xl p-4 bg-white border border-[#E8E5DF] shadow-xs">
+              <div class="flex items-center justify-between mb-2">
+                <div class="text-[11px] font-semibold uppercase tracking-wider text-[#8F8C86]">Missing Keywords</div>
+                <span class="text-[11px] font-bold text-[#B91C1C]" id="miss-count">0</span>
+              </div>
+              <p class="text-[10.5px] text-[#8F8C86] mb-2.5">Click any chip to prompt AI to weave it naturally into your resume:</p>
+              <div class="flex flex-wrap gap-1.5" id="missing-keywords"></div>
+            </div>
+
+            <!-- Strengths -->
+            <div class="rounded-xl p-4 bg-white border border-[#E8E5DF] shadow-xs">
+              <div class="text-[11px] font-semibold uppercase tracking-wider text-[#8F8C86] mb-2.5 flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[15px] text-[#059669]">verified</span>
+                Key Strengths
+              </div>
+              <ul class="flex flex-col gap-2" id="strengths-list"></ul>
+            </div>
+
+            <!-- Improvements -->
+            <div class="rounded-xl p-4 bg-white border border-[#E8E5DF] shadow-xs">
+              <div class="text-[11px] font-semibold uppercase tracking-wider text-[#8F8C86] mb-2.5 flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[15px] text-[#D97757]">lightbulb</span>
+                Recommended Improvements
+              </div>
+              <ul class="flex flex-col gap-2" id="improvements-list"></ul>
+            </div>
+
+            <!-- AI Rewritten Summary Card -->
+            <div class="rounded-xl p-4 bg-white border border-[#DDD6FE] shadow-xs" id="rewritten-section" style="display:none;">
+              <div class="text-[11px] font-semibold uppercase tracking-wider text-[#7c3aed] mb-2 flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[15px]">auto_awesome</span>
+                AI-Optimized Summary
+              </div>
+              <p class="text-[12px] leading-relaxed text-[#374151]" id="rewritten-text"></p>
+              <button onclick="applySummary()" class="mt-3 text-[11.5px] font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 bg-[#F5F3FF] text-[#7c3aed] border border-[#DDD6FE] hover:bg-[#EDE9FE] transition-colors">
+                <span class="material-symbols-outlined text-[14px]">check</span> Apply to Resume
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ── TAB 2: OVERLEAF PDF / PAPER PREVIEW ── -->
+        <div id="view-pdf-tab" class="hidden flex flex-col items-center gap-3">
+          <!-- Zoom Controls -->
+          <div class="w-full flex items-center justify-between px-2 py-1 bg-white border border-[#E8E5DF] rounded-lg text-[12px] text-[#666461]">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-[16px]">picture_as_pdf</span>
+              <span>Page 1 of 1</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button onclick="toggleHighlight()" id="btn-highlight" class="px-2 py-0.5 rounded text-[11px] bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0] font-medium" title="Toggle ATS keyword highlights">
+                Keyword Heatmap: On
+              </button>
+            </div>
+          </div>
+
+          <!-- Document Sheet (Simulated compiled PDF) -->
+          <div class="paper-sheet" id="rendered-paper">
+            <div class="paper-name" id="doc-name">Candidate Name</div>
+            <div class="paper-contact mt-1" id="doc-contact">email@example.com · (555) 000-0000 · Location</div>
+
+            <div class="paper-section-title">Professional Summary</div>
+            <div class="paper-text" id="doc-summary">Results-driven professional ready to deliver impactful solutions.</div>
+
+            <div class="paper-section-title">Work Experience</div>
+            <div id="doc-experience" class="paper-text flex flex-col gap-2"></div>
+
+            <div class="paper-section-title">Skills & Technologies</div>
+            <div class="paper-text" id="doc-skills">Python, JavaScript, SQL, Git, REST APIs</div>
+
+            <div class="paper-section-title">Education</div>
+            <div class="paper-text" id="doc-education">Bachelor of Science in Computer Science</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     SCRIPTS & CLIENT LOGIC
+══════════════════════════════════════════════════════════════ -->
+<script>
+/* ── Sidebar toggle ── */
+const sidebar = document.getElementById('sidebar');
+document.getElementById('hamburger-btn')?.addEventListener('click', () => sidebar.classList.toggle('hidden'));
+document.getElementById('toggle-sidebar-btn')?.addEventListener('click', () => sidebar.classList.toggle('hidden'));
+
+/* ── State ── */
+let chatHistory = [];
+let lastAnalysis = null;
+let showHighlights = true;
+
+/* ── Sample Job Presets ── */
+const JOB_PRESETS = {
+  fullstack: `Senior Fullstack Software Engineer
+Requirements:
+• 4+ years building responsive web applications with React, TypeScript, and modern CSS
+• Strong backend experience with Python, FastAPI, Node.js, and SQL (PostgreSQL)
+• Experience deploying microservices with Docker, Kubernetes, and AWS cloud infrastructure
+• Proven track record with CI/CD automation pipelines, Git workflow, and unit testing
+• Excellent system design, REST API architecture, and cross-functional team collaboration`,
+
+  ai: `AI / Machine Learning Engineer
+Requirements:
+• 3+ years experience developing ML models using Python, PyTorch, and TensorFlow
+• Experience building LLM applications, retrieval-augmented generation (RAG), and REST APIs
+• Strong understanding of Data Analysis, SQL, Data Pipelines, and cloud platforms (AWS / GCP)
+• Proficiency with Docker, Linux environments, and CI/CD for ML deployments
+• Solid foundations in algorithms, system optimization, and model evaluation metrics`,
+
+  pm: `Technical Product Manager
+Requirements:
+• 4+ years product management experience leading technical products from concept to launch
+• Deep understanding of Agile and Scrum methodologies, user research, and roadmapping
+• Ability to communicate effectively with engineering teams, data analysis, and SQL query skills
+• Proven track record improving key business metrics, conversion rates, and retention
+• Experience with cross-functional leadership, stakeholder management, and customer discovery`
+};
+
+function loadJobPreset(type) {
+  if (JOB_PRESETS[type]) {
+    document.getElementById('jd-input').value = JOB_PRESETS[type];
+    setStatus(`Loaded ${type.toUpperCase()} preset`, '#059669');
+  }
+}
+
+/* ── Pre-fill from server if resume selected ── */
+{% if version and version.content_json %}
+(function() {
+  const data = {{ version.content_json | tojson }};
+  let text = '';
+  if (data.name) text += `Name: ${data.name}\n`;
+  if (data.email) text += `Contact: ${data.email} | ${data.phone || ''} | ${data.location || ''}\n\n`;
+  if (data.summary) text += `Summary:\n${data.summary}\n\n`;
+  if (data.experience && data.experience.length) {
+    text += `Experience:\n`;
+    data.experience.forEach(e => {
+      text += `${e.title || 'Role'} at ${e.company || 'Company'} (${e.dates || 'Dates'})\n`;
+      if (e.bullets) e.bullets.forEach(b => text += `• ${b}\n`);
+      text += '\n';
+    });
+  }
+  if (data.skills) {
+    text += `Skills:\n${Array.isArray(data.skills) ? data.skills.join(', ') : data.skills}\n\n`;
+  }
+  if (data.education && data.education.length) {
+    text += `Education:\n`;
+    data.education.forEach(e => text += `${e.degree || 'Degree'} – ${e.school || 'School'} (${e.dates || ''})\n`);
+  }
+  document.getElementById('resume-input').value = text.trim();
+  syncLatexCode();
+  syncDocumentPreview();
+})();
+{% endif %}
+
+/* ── Default initial resume text if empty ── */
+window.addEventListener('DOMContentLoaded', () => {
+  const rInput = document.getElementById('resume-input');
+  if (!rInput.value.trim()) {
+    rInput.value = `Alex Morgan
+alex.morgan@example.com · (555) 234-5678 · San Francisco, CA
+
+Professional Summary:
+Versatile Software Engineer with 4+ years of experience engineering high-performance web applications. Skilled in Python, JavaScript, SQL, and RESTful API development. Passionate about system optimization and agile team delivery.
+
+Experience:
+Software Engineer at TechFlow Labs (2022 – Present)
+• Architected core microservices using Python and Flask, reducing response times by 28%
+• Collaborated with frontend team on React interfaces serving 80,000+ daily active users
+• Designed relational database schemas in PostgreSQL and optimized SQL queries
+• Implemented automated testing suite achieving 85% code coverage
+
+Associate Developer at CloudScale Inc (2020 – 2022)
+• Developed REST APIs and integrated third-party payment gateways
+• Managed Git branching workflows and participated in agile sprint planning
+• Maintained cloud server deployments and monitored application uptime
+
+Skills:
+Python, JavaScript, Flask, React, SQL, PostgreSQL, REST APIs, Git, Docker, Agile
+
+Education:
+B.S. in Computer Science – University of California (2020)`;
+  }
+  const jdInput = document.getElementById('jd-input');
+  if (!jdInput.value.trim()) {
+    loadJobPreset('fullstack');
+  }
+  syncLatexCode();
+  syncDocumentPreview();
+});
+
+/* ── Load resume from dropdown ── */
+function loadResume(id) {
+  if (!id) return;
+  window.location.href = `/resume/ats-optimizer/${id}`;
+}
+
+/* ── Run ATS Analysis ── */
+async function runAnalysis() {
+  const resumeText = document.getElementById('resume-input').value.trim();
+  const jd = document.getElementById('jd-input').value.trim();
+
+  if (!resumeText) { appendMsg('⚠️ Please enter your resume text in the left panel first.', 'ai'); return; }
+  if (!jd) { appendMsg('⚠️ Please enter the target job description in the left panel first.', 'ai'); return; }
+
+  setAnalyzing(true);
+  setStatus('Recompiling & Analyzing…', '#D97757');
+  appendMsg('🔍 Analyzing ATS match score, keyword distribution, and bullet point metrics…', 'ai');
+
+  try {
+    const res = await fetch('/resume/ats-analyze', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ resume_text: resumeText, job_description: jd }),
+    });
+    const data = await res.json();
+
+    if (data.type === 'analysis') {
+      lastAnalysis = data;
+      renderReport(data);
+      syncDocumentPreview();
+      syncLatexCode();
+
+      const msg = `✅ Analysis complete!\n\n**ATS Score: ${data.score}/100 (${data.grade})**\n` +
+        `• **Matched Keywords (${data.matched_keywords?.length || 0})**: ${(data.matched_keywords || []).slice(0,6).join(', ')}\n` +
+        `• **Missing Keywords (${data.missing_keywords?.length || 0})**: ${(data.missing_keywords || []).slice(0,5).join(', ')}\n\n` +
+        `**Top Recommended Action:**\n${(data.improvements || [])[0] || 'Incorporate target skills into recent experience.'}\n\n` +
+        `Chat with me to optimize any section or click any missing keyword in the right panel to insert it!`;
+      appendMsg(msg, 'ai');
+      setStatus(`Score: ${data.score}/100 · ${data.grade}`, '#059669');
+    } else {
+      appendMsg(data.reply || 'Analysis completed.', 'ai');
+      setStatus('Ready', '#059669');
+    }
+  } catch(e) {
+    appendMsg('Network error during analysis. Please try again.', 'ai');
+    setStatus('Error', '#B91C1C');
+  } finally {
+    setAnalyzing(false);
+  }
+}
+
+/* ── Render Report ── */
+function renderReport(data) {
+  document.getElementById('report-placeholder').style.display = 'none';
+  document.getElementById('report-loading').style.display = 'none';
+  const rc = document.getElementById('report-content');
+  rc.style.display = 'flex';
+
+  /* Score Ring */
+  const score = Math.max(0, Math.min(100, data.score || 0));
+  const circumference = 2 * Math.PI * 36;
+  const offset = circumference - (score / 100) * circumference;
+  const fill = document.getElementById('score-ring-fill');
+  const scoreNum = document.getElementById('score-num');
+
+  // Animate counter
+  let current = 0;
+  const step = Math.max(1, score / 45);
+  const timer = setInterval(() => {
+    current = Math.min(current + step, score);
+    scoreNum.textContent = Math.round(current);
+    if (current >= score) clearInterval(timer);
+  }, 16);
+
+  setTimeout(() => { fill.style.strokeDashoffset = offset; }, 50);
+
+  const color = score >= 75 ? '#059669' : score >= 50 ? '#D97757' : '#DC2626';
+  fill.style.stroke = color;
+  document.getElementById('score-indicator').style.background = color;
+
+  const grade = data.grade || (score >= 90 ? 'A+' : score >= 80 ? 'A' : score >= 70 ? 'B+' : score >= 60 ? 'B' : score >= 50 ? 'C' : 'D');
+  const gb = document.getElementById('grade-badge');
+  gb.textContent = grade;
+  gb.className = `text-[11px] font-bold px-2 py-0.5 rounded-full ${grade.startsWith('A') ? 'grade-A' : grade.startsWith('B') ? 'grade-B' : grade.startsWith('C') ? 'grade-C' : 'grade-D'}`;
+
+  document.getElementById('score-subtitle').textContent = score >= 75 ? 'Strong match for this role' : score >= 50 ? 'Moderate match — gaps detected' : 'Low match — requires optimization';
+
+  /* Section Breakdown */
+  const ss = data.section_scores || {};
+  const secEl = document.getElementById('section-scores');
+  secEl.innerHTML = '';
+  const sections = [
+    {key:'summary', label:'Summary', icon:'summarize'},
+    {key:'experience', label:'Experience', icon:'work'},
+    {key:'skills', label:'Skills', icon:'psychology'},
+    {key:'education', label:'Education', icon:'school'},
+  ];
+  sections.forEach(s => {
+    const v = ss[s.key] || 0;
+    const c = v >= 75 ? '#059669' : v >= 50 ? '#D97757' : '#DC2626';
+    secEl.insertAdjacentHTML('beforeend', `
+      <div>
+        <div class="flex items-center justify-between mb-1">
+          <div class="flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[13px]" style="color:${c}">${s.icon}</span>
+            <span class="text-[12px] text-[#4B5563]">${s.label}</span>
+          </div>
+          <span class="text-[12px] font-semibold" style="color:${c}">${v}%</span>
+        </div>
+        <div class="sec-bar-track h-1.5">
+          <div class="sec-bar-fill" style="width:0%;background:${c};" data-w="${v}%"></div>
+        </div>
+      </div>`);
+  });
+  setTimeout(() => {
+    document.querySelectorAll('.sec-bar-fill[data-w]').forEach(b => { b.style.width = b.dataset.w; });
+  }, 100);
+
+  /* Matched Keywords */
+  const mk = document.getElementById('matched-keywords');
+  mk.innerHTML = '';
+  (data.matched_keywords || []).forEach(kw => {
+    mk.insertAdjacentHTML('beforeend', `<span class="chip-match text-[11px] font-medium px-2 py-0.5 rounded-full">${kw}</span>`);
+  });
+  document.getElementById('match-count').textContent = (data.matched_keywords || []).length;
+
+  /* Missing Keywords */
+  const miss = document.getElementById('missing-keywords');
+  miss.innerHTML = '';
+  (data.missing_keywords || []).forEach(kw => {
+    miss.insertAdjacentHTML('beforeend', `
+      <span class="chip-miss text-[11px] font-medium px-2 py-0.5 rounded-full cursor-pointer flex items-center gap-1"
+            onclick="askKeyword('${kw}')" title="Click to ask AI to inject ${kw}">
+        <span>${kw}</span>
+        <span class="text-[10px] font-bold">+</span>
+      </span>`);
+  });
+  document.getElementById('miss-count').textContent = (data.missing_keywords || []).length;
+
+  /* Strengths */
+  const sl = document.getElementById('strengths-list');
+  sl.innerHTML = '';
+  (data.strengths || []).forEach(s => {
+    sl.insertAdjacentHTML('beforeend', `<li class="flex items-start gap-2 text-[12px] text-[#4B5563]"><span class="material-symbols-outlined text-[14px] flex-shrink-0 mt-0.5 text-[#059669]">check_circle</span><span>${s}</span></li>`);
+  });
+
+  /* Improvements */
+  const il = document.getElementById('improvements-list');
+  il.innerHTML = '';
+  (data.improvements || []).forEach((imp, i) => {
+    il.insertAdjacentHTML('beforeend', `
+      <li class="flex items-start gap-2 text-[12px] text-[#4B5563]">
+        <span class="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 text-[9px] font-bold mt-0.5 bg-[#FFF7ED] text-[#D97757] border border-[#FFEDD5]">${i+1}</span>
+        <span class="flex-1">${imp}</span>
+        <button onclick="fixImprovement('${imp.replace(/'/g,"\\'")}')" class="ml-1 flex-shrink-0 text-[10.5px] font-semibold px-2 py-0.5 rounded bg-[#F5F3FF] text-[#7c3aed] border border-[#DDD6FE] hover:bg-[#EDE9FE] transition-colors">Fix →</button>
+      </li>`);
+  });
+
+  /* Rewritten summary */
+  if (data.rewritten_summary) {
+    document.getElementById('rewritten-section').style.display = '';
+    document.getElementById('rewritten-text').textContent = data.rewritten_summary;
+  }
+}
+
+/* ── Chat Actions ── */
+function askKeyword(keyword) {
+  const prompt = `How can I naturally add the missing skill "${keyword}" to my resume experience bullets with quantified impact?`;
+  document.getElementById('chat-input').value = prompt;
+  document.getElementById('chat-input').focus();
+}
+
+function fixImprovement(text) {
+  const prompt = `Help me address this resume improvement: "${text}". Provide the revised bullet or section text ready to copy.`;
+  document.getElementById('chat-input').value = prompt;
+  document.getElementById('chat-input').focus();
+}
+
+function quickPrompt(prompt) {
+  document.getElementById('chat-input').value = prompt;
+  document.getElementById('chat-input').focus();
+}
+
+function applySummary() {
+  const newSummary = document.getElementById('rewritten-text').textContent.trim();
+  if (!newSummary) return;
+  const rInput = document.getElementById('resume-input');
+  let current = rInput.value;
+  if (current.includes('Summary:')) {
+    current = current.replace(/Summary:\s*[\s\S]*?(?=\n\n[A-Z]|\n[A-Z]|$)/i, `Summary:\n${newSummary}\n\n`);
+  } else if (current.includes('Professional Summary:')) {
+    current = current.replace(/Professional Summary:\s*[\s\S]*?(?=\n\n[A-Z]|\n[A-Z]|$)/i, `Professional Summary:\n${newSummary}\n\n`);
+  } else {
+    current = `Professional Summary:\n${newSummary}\n\n` + current;
+  }
+  rInput.value = current;
+  syncDocumentPreview();
+  syncLatexCode();
+  appendMsg('✅ Applied optimized summary to your resume! Click Recompile to see updated score.', 'ai');
+}
+
+/* ── Chat messaging ── */
+const chatEl = document.getElementById('chat-messages');
+
+function formatMarkdownAts(text) {
+  if (!text) return '';
+
+  // Strip fenced code blocks
+  text = text.replace(/```(?:\w+)?\n?([\s\S]*?)```/g, (_, code) => {
+    return '\n' + code.trim() + '\n';
+  });
+
+  let html = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Bold
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  // Italic
+  html = html.replace(/(?<![\w])\*([^*\n]+)\*(?![\w])/g, '<em>$1</em>');
+  // Inline code
+  html = html.replace(/`([^`]+)`/g, '<code style="background:#F0EDE8;padding:1px 5px;border-radius:4px;font-size:11px;font-family:monospace;">$1</code>');
+
+  // Headings
+  html = html.replace(/^###\s+(.+)$/gm, '<div style="font-weight:600;margin:6px 0 2px;">$1</div>');
+  html = html.replace(/^##\s+(.+)$/gm, '<div style="font-weight:700;margin:8px 0 2px;">$1</div>');
+  html = html.replace(/^#\s+(.+)$/gm, '<div style="font-weight:700;font-size:1.05em;margin:10px 0 3px;">$1</div>');
+
+  // Bullets
+  html = html.replace(/^[ \t]*[•\-\*][ \t]+(.+)$/gm, '<li style="margin-left:16px;list-style:disc;">$1</li>');
+  html = html.replace(/^[ \t]*(\d+)\.[ \t]+(.+)$/gm, '<li style="margin-left:16px;list-style:decimal;">$2</li>');
+  html = html.replace(/((?:<li[^>]*>.*?<\/li>\n?)+)/g, '<ul style="margin:4px 0;">$1</ul>');
+
+  // Newlines
+  html = html.replace(/\n{2,}/g, '</p><p style="margin:6px 0 0;">');
+  html = html.replace(/\n/g, '<br>');
+  html = '<p style="margin:0;">' + html + '</p>';
+  return html;
+}
+
+function streamTextAts(fullText, targetEl, scrollContainer, onDone) {
+  const words = fullText.split(/(\s+)/);
+  let index = 0;
+  let accumulated = '';
+  const WORD_DELAY = 18;
+
+  function nextWord() {
+    if (index >= words.length) {
+      targetEl.innerHTML = formatMarkdownAts(accumulated);
+      if (onDone) onDone();
+      return;
+    }
+    accumulated += words[index];
+    index++;
+    targetEl.innerHTML = formatMarkdownAts(accumulated);
+    if (scrollContainer) scrollContainer.scrollTop = scrollContainer.scrollHeight;
+    setTimeout(nextWord, WORD_DELAY);
+  }
+
+  nextWord();
+}
+
+function appendMsg(text, role) {
+  const wrap = document.createElement('div');
+  wrap.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'} msg-anim`;
+  const bubble = document.createElement('div');
+  bubble.className = `chat-bubble ${role === 'user' ? 'chat-user' : 'chat-ai'}`;
+
+  if (role === 'ai') {
+    const header = document.createElement('div');
+    header.className = 'flex items-center gap-1.5 mb-1.5';
+    header.innerHTML = `<div class="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-[#7c3aed] to-[#06b6d4]"><span class="material-symbols-outlined text-white text-[11px]" style="font-variation-settings:'FILL' 1">auto_awesome</span></div><span class="text-[11px] font-semibold text-[#7c3aed]">ATS AI</span>`;
+
+    // Content div — will be filled by typewriter
+    const contentEl = document.createElement('div');
+    contentEl.className = 'ai-text-content';
+    contentEl.style.cssText = 'font-size:12.5px;line-height:1.6;color:#2A2826;';
+
+    bubble.appendChild(header);
+    bubble.appendChild(contentEl);
+    wrap.appendChild(bubble);
+    chatEl.appendChild(wrap);
+    chatEl.scrollTop = chatEl.scrollHeight;
+    chatHistory.push({ role: 'assistant', content: text });
+
+    // Stream the text in
+    streamTextAts(text, contentEl, chatEl);
+  } else {
+    bubble.textContent = text;
+    wrap.appendChild(bubble);
+    chatEl.appendChild(wrap);
+    chatEl.scrollTop = chatEl.scrollHeight;
+    chatHistory.push({ role: 'user', content: text });
+  }
+
+  return bubble;
+}
+
+function showTyping() {
+  const div = document.createElement('div');
+  div.id = 'typing-indicator';
+  div.className = 'flex justify-start msg-anim';
+  div.innerHTML = `<div class="chat-bubble chat-ai" style="padding:10px 16px;"><div class="chat-thinking flex gap-1"><span></span><span></span><span></span></div></div>`;
+  chatEl.appendChild(div);
+  chatEl.scrollTop = chatEl.scrollHeight;
+}
+function removeTyping() { document.getElementById('typing-indicator')?.remove(); }
+
+// Greetings / casual phrases that should get a friendly reply, not a full analysis
+const GREETING_PATTERNS = /^(hi+|hey+|hello+|howdy|sup|yo|good\s*(morning|afternoon|evening|day)|what'?s up|hiya|greetings|hola|salut|ciao|bonjour|how are you|how's it going|what can you do|who are you|what do you do)[!?.,\s]*$/i;
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  appendMsg(msg, 'user');
+
+  // ── Friendly greeting intercept — no backend call needed ──
+  if (GREETING_PATTERNS.test(msg)) {
+    showTyping();
+    document.getElementById('send-btn').disabled = true;
+    await new Promise(r => setTimeout(r, 700)); // brief thinking delay
+    removeTyping();
+    const greetings = [
+      "Hey there! 👋 I'm your ATS AI coach. How can I help you with your resume today?",
+      "Hello! I'm here to help you optimize your resume for ATS systems. What would you like to work on?",
+      "Hi! Ready to boost your resume's ATS score. Paste your resume and a job description to get started, or ask me anything about resume optimization!",
+      "Hey! Great to meet you. I can help analyze your ATS match score, improve keywords, rewrite bullets, and more. What would you like help with?",
+    ];
+    const reply = greetings[Math.floor(Math.random() * greetings.length)];
+    appendMsg(reply, 'ai');
+    document.getElementById('send-btn').disabled = false;
+    return;
+  }
+
+  showTyping();
+  document.getElementById('send-btn').disabled = true;
+
+  try {
+    const res = await fetch('/resume/ats-analyze', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        resume_text: document.getElementById('resume-input').value.trim(),
+        job_description: document.getElementById('jd-input').value.trim(),
+        message: msg,
+        history: chatHistory.slice(-6),
+      }),
+    });
+    const data = await res.json();
+    removeTyping();
+    if (data.type === 'analysis') {
+      lastAnalysis = data;
+      renderReport(data);
+      appendMsg(`✅ Analysis recompiled! ATS Score: ${data.score}/100 (${data.grade})`, 'ai');
+    } else {
+      appendMsg(data.reply || 'Here is my recommendation for your resume.', 'ai');
+    }
+  } catch(e) {
+    removeTyping();
+    appendMsg('Network connection error. Please try again.', 'ai');
+  } finally {
+    document.getElementById('send-btn').disabled = false;
+  }
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendChat();
+  }
+}
+
+function setAnalyzing(on) {
+  ['analyze-btn','analyze-btn-2'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.disabled = on;
+    btn.innerHTML = on
+      ? '<span class="material-symbols-outlined text-[16px] animate-spin">autorenew</span> Recompiling…'
+      : id === 'analyze-btn'
+        ? '<span class="material-symbols-outlined text-[17px]" style="font-variation-settings:\'FILL\' 1">play_arrow</span> Recompile & Analyze'
+        : '<span class="material-symbols-outlined text-[17px]" style="font-variation-settings:\'FILL\' 1">analytics</span> Run ATS Analysis';
+  });
+  if (on) {
+    document.getElementById('report-placeholder').style.display = 'none';
+    document.getElementById('report-content').style.display = 'none';
+    document.getElementById('report-loading').style.display = 'flex';
+  } else {
+    document.getElementById('report-loading').style.display = 'none';
+  }
+}
+
+function setStatus(text, color) {
+  document.getElementById('status-text').textContent = text;
+  document.getElementById('status-dot').style.background = color;
+}
+
+/* ── Tabs & View Modes ── */
+function switchCenterTab(tab) {
+  const isChat = tab === 'chat';
+  document.getElementById('center-chat-view').classList.toggle('hidden', !isChat);
+  document.getElementById('center-code-view').classList.toggle('hidden', isChat);
+
+  document.getElementById('tab-chat-btn').className = isChat
+    ? 'flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-semibold text-[#1F1E1D] border-b-2 border-[#7c3aed]'
+    : 'flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-[#666461] hover:text-[#1F1E1D]';
+  document.getElementById('tab-code-btn').className = !isChat
+    ? 'flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-semibold text-[#1F1E1D] border-b-2 border-[#7c3aed]'
+    : 'flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-[#666461] hover:text-[#1F1E1D]';
+
+  if (!isChat) syncLatexCode();
+}
+
+function switchRightTab(tab) {
+  const isReport = tab === 'report';
+  document.getElementById('view-report-tab').classList.toggle('hidden', !isReport);
+  document.getElementById('view-pdf-tab').classList.toggle('hidden', isReport);
+
+  document.getElementById('rp-tab-report').className = isReport
+    ? 'px-2.5 py-1 text-[12px] font-semibold rounded bg-white text-[#1F1E1D] shadow-xs'
+    : 'px-2.5 py-1 text-[12px] font-medium rounded text-[#666461] hover:text-[#1F1E1D]';
+  document.getElementById('rp-tab-pdf').className = !isReport
+    ? 'px-2.5 py-1 text-[12px] font-semibold rounded bg-white text-[#1F1E1D] shadow-xs'
+    : 'px-2.5 py-1 text-[12px] font-medium rounded text-[#666461] hover:text-[#1F1E1D]';
+
+  if (!isReport) syncDocumentPreview();
+}
+
+function setViewMode(mode) {
+  const lp = document.getElementById('panel-left');
+  const cp = document.getElementById('panel-center');
+  const rp = document.getElementById('panel-right');
+
+  ['btn-view-all','btn-view-chat','btn-view-prev'].forEach(id => {
+    document.getElementById(id).className = 'px-2 py-1 text-[11px] font-medium rounded text-[#666461] hover:text-[#1F1E1D]';
+  });
+
+  if (mode === 'chat') {
+    lp.classList.add('hidden');
+    cp.classList.remove('hidden');
+    rp.classList.add('hidden');
+    document.getElementById('btn-view-chat').className = 'px-2 py-1 text-[11px] font-medium rounded bg-white text-[#1F1E1D] shadow-xs';
+  } else if (mode === 'preview') {
+    lp.classList.add('hidden');
+    cp.classList.add('hidden');
+    rp.classList.remove('hidden');
+    rp.style.width = '100%';
+    document.getElementById('btn-view-prev').className = 'px-2 py-1 text-[11px] font-medium rounded bg-white text-[#1F1E1D] shadow-xs';
+  } else {
+    lp.classList.remove('hidden');
+    cp.classList.remove('hidden');
+    rp.classList.remove('hidden');
+    rp.style.width = '370px';
+    document.getElementById('btn-view-all').className = 'px-2 py-1 text-[11px] font-medium rounded bg-white text-[#1F1E1D] shadow-xs';
+  }
+}
+
+/* ── Live Document Preview & Heatmap ── */
+function syncDocumentPreview() {
+  const text = document.getElementById('resume-input').value;
+  const lines = text.split('\n');
+
+  let name = 'Candidate Name';
+  let contact = '';
+  let summary = '';
+  let experience = [];
+  let skills = '';
+  let education = '';
+
+  let currentSection = 'header';
+  let curExp = null;
+
+  lines.forEach(line => {
+    const trimmed = line.trim();
+    if (!trimmed) return;
+
+    if (trimmed.toLowerCase().startsWith('summary:') || trimmed.toLowerCase().startsWith('professional summary:')) {
+      currentSection = 'summary';
+      summary = trimmed.replace(/^(professional\s+)?summary:\s*/i, '');
+      return;
+    }
+    if (trimmed.toLowerCase().startsWith('experience:') || trimmed.toLowerCase().startsWith('work experience:')) {
+      currentSection = 'experience';
+      return;
+    }
+    if (trimmed.toLowerCase().startsWith('skills:') || trimmed.toLowerCase().startsWith('technical skills:')) {
+      currentSection = 'skills';
+      skills = trimmed.replace(/^(technical\s+)?skills:\s*/i, '');
+      return;
+    }
+    if (trimmed.toLowerCase().startsWith('education:')) {
+      currentSection = 'education';
+      education = trimmed.replace(/^education:\s*/i, '');
+      return;
+    }
+
+    if (currentSection === 'header') {
+      if (name === 'Candidate Name') name = trimmed.replace(/^name:\s*/i, '');
+      else contact += (contact ? ' · ' : '') + trimmed.replace(/^contact:\s*/i, '');
+    } else if (currentSection === 'summary') {
+      summary += (summary ? ' ' : '') + trimmed;
+    } else if (currentSection === 'skills') {
+      skills += (skills ? ', ' : '') + trimmed;
+    } else if (currentSection === 'education') {
+      education += (education ? ' | ' : '') + trimmed;
+    } else if (currentSection === 'experience') {
+      if (trimmed.startsWith('•') || trimmed.startsWith('-')) {
+        if (!curExp) curExp = { title: 'Role', bullets: [] };
+        curExp.bullets.push(trimmed.replace(/^[•\-]\s*/, ''));
+      } else {
+        curExp = { title: trimmed, bullets: [] };
+        experience.push(curExp);
+      }
+    }
+  });
+
+  document.getElementById('doc-name').textContent = name || 'Candidate Name';
+  document.getElementById('doc-contact').textContent = contact || 'contact@example.com · Location';
+  document.getElementById('doc-summary').textContent = summary || 'Results-driven software professional.';
+  document.getElementById('doc-skills').textContent = skills || 'Python, JavaScript, SQL, Git, Docker, REST APIs';
+  document.getElementById('doc-education').textContent = education || 'B.S. in Computer Science';
+
+  const expContainer = document.getElementById('doc-experience');
+  expContainer.innerHTML = '';
+  if (experience.length === 0) {
+    expContainer.innerHTML = '<div>• Software Engineer at Tech Corp — Built key product features.</div>';
+  } else {
+    experience.forEach(exp => {
+      let html = `<div class="mb-2"><div class="font-bold text-[11px] text-[#111827]">${exp.title}</div>`;
+      if (exp.bullets && exp.bullets.length) {
+        html += `<ul class="list-disc pl-4 text-[10.5px] text-[#374151] space-y-0.5">`;
+        exp.bullets.forEach(b => { html += `<li>${b}</li>`; });
+        html += `</ul>`;
+      }
+      html += `</div>`;
+      expContainer.insertAdjacentHTML('beforeend', html);
+    });
+  }
+
+  if (showHighlights && lastAnalysis && lastAnalysis.matched_keywords) {
+    applyHeatmapHighlights();
+  }
+}
+
+function toggleHighlight() {
+  showHighlights = !showHighlights;
+  const btn = document.getElementById('btn-highlight');
+  btn.textContent = `Keyword Heatmap: ${showHighlights ? 'On' : 'Off'}`;
+  btn.className = showHighlights
+    ? 'px-2 py-0.5 rounded text-[11px] bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0] font-medium'
+    : 'px-2 py-0.5 rounded text-[11px] bg-[#F4F2EE] text-[#666461] border border-[#E8E5DF] font-medium';
+  if (showHighlights) {
+    syncDocumentPreview();
+  } else {
+    // remove highlights
+    document.querySelectorAll('#rendered-paper mark').forEach(m => {
+      m.replaceWith(document.createTextNode(m.textContent));
+    });
+  }
+}
+
+function applyHeatmapHighlights() {
+  if (!lastAnalysis || !lastAnalysis.matched_keywords) return;
+  const keywords = lastAnalysis.matched_keywords;
+  const paper = document.getElementById('rendered-paper');
+
+  keywords.forEach(kw => {
+    if (kw.length < 3) return;
+    const regex = new RegExp(`\\b(${kw})\\b`, 'gi');
+    const walker = document.createTreeWalker(paper, NodeFilter.SHOW_TEXT, null, false);
+    const nodesToReplace = [];
+    let node;
+    while (node = walker.nextNode()) {
+      if (node.parentElement.tagName !== 'MARK' && regex.test(node.nodeValue)) {
+        nodesToReplace.push(node);
+      }
+    }
+    nodesToReplace.forEach(n => {
+      const span = document.createElement('span');
+      span.innerHTML = n.nodeValue.replace(regex, '<mark style="background:#d1fae5;color:#065f46;border-radius:3px;padding:0 2px;">$1</mark>');
+      n.replaceWith(...span.childNodes);
+    });
+  });
+}
+
+/* ── LaTeX Code Generator ── */
+function syncLatexCode() {
+  const text = document.getElementById('resume-input').value;
+  const lines = text.split('\n');
+  const name = lines[0] || 'Candidate Name';
+
+  const code = `\\documentclass[letterpaper,10pt]{article}
+\\usepackage{latexsym}
+\\usepackage[empty]{fullpage}
+\\usepackage{titlesec}
+\\usepackage{marvosym}
+\\usepackage[usenames,dvipsnames]{color}
+\\usepackage{verbatim}
+\\usepackage{enumitem}
+\\usepackage[hidelinks]{hyperref}
+\\usepackage{fancyhdr}
+\\usepackage[english]{babel}
+\\usepackage{tabularx}
+
+\\pagestyle{fancy}
+\\fancyhf{}
+\\renewcommand{\\headrulewidth}{0pt}
+\\renewcommand{\\footrulewidth}{0pt}
+
+% Adjust margins
+\\addtolength{\\oddsidemargin}{-0.5in}
+\\addtolength{\\evensidemargin}{-0.5in}
+\\addtolength{\\textwidth}{1in}
+\\addtolength{\\topmargin}{-.5in}
+\\addtolength{\\textheight}{1.0in}
+
+\\titleformat{\\section}{\\scshape\\raggedright\\large}{}{0em}{}[\\color{black}\\titlerule]
+
+\\begin{document}
+
+%----------HEADING----------
+\\begin{center}
+  \\textbf{\\Huge \\scshape ${name}} \\\\ \\vspace{1pt}
+  \\small (555) 000-0000 $|$ \\href{mailto:email@example.com}{\\underline{email@example.com}} $|$ 
+  \\href{https://linkedin.com}{\\underline{linkedin.com/in/profile}} $|$
+  \\href{https://github.com}{\\underline{github.com/profile}}
+\\end{center}
+
+%-----------PROFESSIONAL SUMMARY-----------
+\\section{Professional Summary}
+\\small{
+  ${document.getElementById('doc-summary').textContent.replace(/&/g, '\\&')}
+}
+
+%-----------EXPERIENCE-----------
+\\section{Experience}
+\\begin{itemize}[leftmargin=0.15in, label={}]
+  \\item
+    \\begin{tabular*}{\\textwidth}{l@{\\extracolsep{\\fill}}r}
+      \\textbf{Senior Software Engineer} & 2022 -- Present \\\\
+      \\textit{Tech Company} & San Francisco, CA \\\\
+    \\end{tabular*}\\vspace{-5pt}
+    \\begin{itemize}[leftmargin=0.15in]
+      \\item Architected microservices with Python and React for 80,000+ daily active users.
+      \\item Decreased API latency by 38\\% via database indexing and Redis query caching.
+    \\end{itemize}
+\\end{itemize}
+
+%-----------TECHNICAL SKILLS-----------
+\\section{Technical Skills}
+\\begin{itemize}[leftmargin=0.15in, label={}]
+  \\small{\\item{
+    \\textbf{Languages}: Python, JavaScript, TypeScript, SQL, HTML/CSS \\\\
+    \\textbf{Frameworks}: React, FastAPI, Flask, Node.js, Next.js \\\\
+    \\textbf{Developer Tools}: Git, Docker, Kubernetes, AWS, CI/CD Pipelines
+  }}
+\\end{itemize}
+
+%-----------EDUCATION-----------
+\\section{Education}
+\\begin{itemize}[leftmargin=0.15in, label={}]
+  \\item
+    \\begin{tabular*}{\\textwidth}{l@{\\extracolsep{\\fill}}r}
+      \\textbf{Bachelor of Science in Computer Science} & 2020 \\\\
+      \\textit{University} & \\\\
+    \\end{tabular*}
+\\end{itemize}
+
+\\end{document}`;
+
+  document.getElementById('latex-editor').value = code;
+}
+
+function copyLatexCode() {
+  const code = document.getElementById('latex-editor').value;
+  navigator.clipboard.writeText(code);
+  setStatus('LaTeX code copied!', '#059669');
+}
+
+function downloadLatexFile() {
+  const code = document.getElementById('latex-editor').value;
+  const blob = new Blob([code], {type: 'text/x-tex'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'resume.tex';
+  a.click();
+}
+
+function downloadReport() {
+  if (!lastAnalysis) {
+    alert('Please run ATS analysis first.');
+    return;
+  }
+  const text = `ATS RESUME ANALYSIS REPORT\n========================\nScore: ${lastAnalysis.score}/100 (${lastAnalysis.grade})\n\nMatched Keywords:\n${(lastAnalysis.matched_keywords||[]).join(', ')}\n\nMissing Keywords:\n${(lastAnalysis.missing_keywords||[]).join(', ')}\n\nStrengths:\n${(lastAnalysis.strengths||[]).map(s=>'• '+s).join('\n')}\n\nImprovements:\n${(lastAnalysis.improvements||[]).map(i=>'• '+i).join('\n')}`;
+  const blob = new Blob([text], {type: 'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'ats_report.txt';
+  a.click();
+}
+</script>
+
+</body>
+</html>

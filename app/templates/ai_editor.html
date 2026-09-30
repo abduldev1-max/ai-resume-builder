@@ -1,0 +1,1977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Editor — ResumeAI</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','system-ui','sans-serif'],serif:['Newsreader','Georgia','serif']}}}};</script>
+<style>
+@layer base{html,body{height:100%;margin:0;padding:0;background:#FAF9F6;color:#1F1E1D;}}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-thumb{background:#D9D5CF;border-radius:9999px;}
+
+.nav-active{background:#EDE8E1!important;font-weight:500;}
+.qa-btn{transition:background .14s,transform .12s;}
+.qa-btn:hover{transform:translateY(-1px);}
+
+/* Form */
+.fi{width:100%;background:#fff;border:1px solid #E8E5DF;border-radius:9px;padding:7px 11px;font-size:13px;font-family:inherit;color:#1F1E1D;outline:none;transition:border-color .16s,box-shadow .16s;}
+.fi:focus{border-color:#a78bfa;box-shadow:0 0 0 3px rgba(167,139,250,.11);}
+.fi::placeholder{color:#B0ACA6;}
+textarea.fi{resize:vertical;min-height:60px;}
+.fl{font-size:11px;font-weight:600;color:#666461;margin-bottom:4px;display:block;letter-spacing:.04em;text-transform:uppercase;}
+.sc{background:#fff;border:1px solid #E7E3DC;border-radius:13px;padding:16px 18px;margin-bottom:12px;}
+.sc-title{font-size:12.5px;font-weight:700;color:#1F1E1D;margin-bottom:12px;display:flex;align-items:center;gap:7px;}
+.eb{border:1px solid #EFECE6;border-radius:9px;padding:12px;margin-bottom:8px;position:relative;background:#FAFAF8;}
+.rm-btn{position:absolute;top:9px;right:9px;width:22px;height:22px;border-radius:6px;border:none;background:rgba(239,68,68,.08);color:#ef4444;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .14s;}
+.rm-btn:hover{background:rgba(239,68,68,.18);}
+.add-btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;border:1px dashed #D9D5CF;background:transparent;color:#8F8C86;font-size:12px;font-weight:500;cursor:pointer;transition:all .14s;width:100%;justify-content:center;margin-top:4px;}
+.add-btn:hover{border-color:#a78bfa;color:#7c3aed;background:rgba(124,58,237,.04);}
+.btn-gen{background:linear-gradient(135deg,#7c3aed,#06b6d4);color:#fff;border:none;border-radius:10px;padding:10px 22px;font-size:13.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;transition:filter .16s,transform .12s;font-family:inherit;}
+.btn-gen:hover{filter:brightness(1.08);}
+.btn-gen:active{transform:scale(.98);}
+.btn-gen:disabled{opacity:.5;cursor:not-allowed;}
+
+/* Chat */
+.chat-bubble{padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.6;max-width:100%;word-wrap:break-word;}
+.chat-user{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border-radius:14px 14px 4px 14px;align-self:flex-end;white-space:pre-wrap;}
+.chat-ai{background:#fff;color:#1F1E1D;border:1px solid #E7E3DC;border-radius:14px 14px 14px 4px;align-self:flex-start;width:100%;box-shadow:0 1px 3px rgba(0,0,0,.03);}
+.chat-thinking{display:flex;gap:4px;padding:10px 14px;background:#fff;border:1px solid #E7E3DC;border-radius:14px;align-self:flex-start;}
+.chat-thinking span{width:6px;height:6px;border-radius:50%;background:#a78bfa;animation:bounce .9s infinite;}
+.chat-thinking span:nth-child(2){animation-delay:.15s;}
+.chat-thinking span:nth-child(3){animation-delay:.3s;}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-6px);}}
+.chat-badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;letter-spacing:0.02em;display:inline-flex;align-items:center;gap:3px;}
+.chat-badge-groq{background:rgba(249,115,22,0.1);color:#c2410c;border:1px solid rgba(249,115,22,0.25);}
+.chat-badge-gemini{background:rgba(59,130,246,0.1);color:#1d4ed8;border:1px solid rgba(59,130,246,0.25);}
+.chat-badge-auto{background:rgba(124,58,237,0.1);color:#6d28d9;border:1px solid rgba(124,58,237,0.25);}
+.prompt-chip{transition:all .15s ease;}
+.prompt-chip:hover{transform:translateY(-1px);border-color:#a78bfa;background:#FAF8FF;box-shadow:0 2px 5px rgba(124,58,237,.06);}
+
+/* LaTeX Preview sheet styling */
+.rv-name{font-size:20px;font-weight:700;letter-spacing:.02em;margin-bottom:3px;font-family:Georgia,'Times New Roman',serif;text-align:center;text-transform:uppercase;color:#111;}
+.rv-target-role{font-size:12px;font-weight:700;letter-spacing:.02em;margin-bottom:3px;text-align:center;color:#111;font-family:Georgia,'Times New Roman',serif;}
+.rv-contact{font-size:9.5px;color:#333;margin-bottom:10px;text-align:center;letter-spacing:.02em;font-family:'Times New Roman',serif;}
+.rv-sec-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;border-bottom:1.2px solid #1a1a1a;padding-bottom:1.5px;margin:9px 0 5px;font-family:'Times New Roman',serif;color:#111;}
+.rv-entry-title{font-weight:700;font-size:10px;color:#111;font-family:'Times New Roman',serif;}
+.rv-entry-sub{font-size:9.5px;color:#333;font-family:'Times New Roman',serif;}
+.rv-bullet{margin-left:14px;list-style:disc;font-size:9px;color:#222;line-height:1.5;margin-top:2px;font-family:'Times New Roman',serif;}
+.latex-paper{background:#fff;border:1px solid #D9D5CF;box-shadow:0 4px 18px rgba(0,0,0,.08);font-family:'Times New Roman',serif;}
+
+.rv-entry { margin-bottom: 8px; }
+.rv-company { font-weight: 700; font-size: 10.5px; color: #111; text-transform: uppercase; font-family: 'Times New Roman', serif; }
+.rv-loc { font-weight: 700; font-size: 9.5px; color: #111; font-family: 'Times New Roman', serif; }
+.rv-title { font-weight: 700; font-size: 9.5px; color: #222; font-family: 'Times New Roman', serif; }
+.rv-dates { font-weight: 600; font-size: 9.5px; color: #333; font-family: 'Times New Roman', serif; }
+.rv-edu-entry { margin-bottom: 6px; }
+.rv-school { font-weight: 700; font-size: 10.5px; color: #111; text-transform: uppercase; font-family: 'Times New Roman', serif; }
+.rv-year { font-weight: 700; font-size: 9.5px; color: #111; font-family: 'Times New Roman', serif; }
+.rv-degree { font-style: italic; font-size: 9.5px; color: #222; font-family: 'Times New Roman', serif; }
+.rv-gpa { font-style: normal; font-weight: 600; font-size: 9px; color: #444; font-family: 'Times New Roman', serif; }
+
+/* Editable preview sections */
+.rv-editable[contenteditable]:focus { outline:none; }
+.rv-editable[contenteditable]:hover { background:rgba(124,58,237,.03); border-radius:3px; cursor:text; }
+.rv-editable[contenteditable]:focus  { background:rgba(124,58,237,.05); border-radius:3px; box-shadow:0 0 0 1.5px rgba(124,58,237,.2); }
+[contenteditable]:focus { outline: none; }
+#rv-name[contenteditable]:hover, #rv-contact[contenteditable]:hover { background:rgba(124,58,237,.03); border-radius:3px; cursor:text; }
+#rv-name[contenteditable]:focus, #rv-contact[contenteditable]:focus { background:rgba(124,58,237,.05); box-shadow:0 0 0 1.5px rgba(124,58,237,.2); border-radius:3px; }
+
+/* Preview drawer */
+#preview-drawer{transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);}
+#preview-drawer.open{transform:translateX(0);}
+
+@keyframes fadein{from{opacity:0;transform:translateY(3px);}to{opacity:1;transform:none;}}
+.msg-anim{animation:fadein .22s ease;}
+
+/* ── Print styles fallback ── */
+@media print {
+  body > * { display: none !important; }
+}
+</style>
+</head>
+<body class="font-sans antialiased overflow-hidden flex h-screen bg-[#FAF9F6]">
+
+<!-- ══ SIDEBAR ══════════════════════════════════════════ -->
+<aside id="sidebar" class="w-[250px] flex-shrink-0 bg-[#FBF9F7] border-r border-[#E8E5DF] flex flex-col h-full z-30 select-none">
+  <div class="flex flex-col h-full overflow-hidden">
+    <!-- Logo -->
+    <div class="h-14 px-4 flex items-center border-b border-[#EFECE6]">
+      <a href="/resume/dashboard" class="flex items-center gap-2.5">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="ResumeAI Logo" class="w-7 h-7 object-contain">
+        <span class="font-serif text-[1.1rem] font-medium text-[#1F1E1D]">ResumeAI</span>
+      </a>
+    </div>
+    <!-- Nav -->
+    <div class="px-2.5 pt-3 pb-2 flex flex-col gap-0.5 text-[13.5px]">
+      <a href="/resume/dashboard" class="flex items-center gap-3 px-2.5 py-1.5 rounded-lg text-[#1F1E1D] hover:bg-[#F0ECE6] transition-colors">
+        <span class="material-symbols-outlined text-[18px] text-[#666461]">dashboard</span>Dashboard
+      </a>
+      <a href="/resume/library" class="flex items-center gap-3 px-2.5 py-1.5 rounded-lg text-[#1F1E1D] hover:bg-[#F0ECE6] transition-colors">
+        <span class="material-symbols-outlined text-[18px] text-[#666461]">description</span>Resume
+      </a>
+      <a href="/resume/editor" class="nav-active flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[#1F1E1D] hover:bg-[#F0ECE6] transition-colors">
+        <div class="flex items-center gap-3"><span class="material-symbols-outlined text-[18px] text-[#666461]">auto_fix_high</span>AI Editor</div>
+        <span class="text-[10.5px] font-semibold px-1.5 py-0.5 rounded-md bg-[#E4EBF7] text-[#2C6ECB]">AI</span>
+      </a>
+      <a href="/resume/ats-optimizer" class="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[#1F1E1D] hover:bg-[#F0ECE6] transition-colors">
+        <div class="flex items-center gap-3"><span class="material-symbols-outlined text-[18px] text-[#666461]">check_circle</span>ATS Optimizer</div>
+        <span class="text-[10.5px] font-semibold px-1.5 py-0.5 rounded-md bg-[#ECE8E1] text-[#666461]">Pro</span>
+      </a>
+    </div>
+    <!-- Divider -->
+    <div class="mx-3 border-t border-[#EFECE6] mt-1"></div>
+    <!-- Quick Actions -->
+    <div class="px-2.5 pt-3 pb-1">
+      <div class="px-2 mb-2 text-[11px] font-semibold uppercase tracking-widest text-[#8F8C86]">Quick Actions</div>
+      <div class="grid grid-cols-2 gap-1.5">
+        <a href="/resume/editor" class="qa-btn flex flex-col items-center gap-1 py-2.5 rounded-xl text-center border border-[#EFECE6] bg-white hover:bg-[#F5F3FF] hover:border-[#c4b5fd]">
+          <span class="material-symbols-outlined text-[19px]" style="color:#7c3aed;font-variation-settings:'FILL' 1">add_circle</span>
+          <span class="text-[10.5px] font-medium text-[#1F1E1D]">New Resume</span>
+        </a>
+        <a href="/resume/editor" class="qa-btn flex flex-col items-center gap-1 py-2.5 rounded-xl text-center border border-[#EFECE6] bg-white hover:bg-[#ECFEFF] hover:border-[#67e8f9]">
+          <span class="material-symbols-outlined text-[19px]" style="color:#06b6d4;font-variation-settings:'FILL' 1">auto_fix_high</span>
+          <span class="text-[10.5px] font-medium text-[#1F1E1D]">AI Editor</span>
+        </a>
+        <a href="/resume/ats-optimizer" class="qa-btn flex flex-col items-center gap-1 py-2.5 rounded-xl text-center border border-[#EFECE6] bg-white hover:bg-[#F0FDF4] hover:border-[#86efac]">
+          <span class="material-symbols-outlined text-[19px]" style="color:#10b981;font-variation-settings:'FILL' 1">check_circle</span>
+          <span class="text-[10.5px] font-medium text-[#1F1E1D]">ATS Check</span>
+        </a>
+      </div>
+    </div>
+    <div class="mx-3 border-t border-[#EFECE6] mt-2"></div>
+    <div class="flex-1"></div>
+    <!-- Footer -->
+    <div class="p-2 border-t border-[#E8E5DF]">
+      <div class="flex items-center justify-between px-1">
+        <button class="flex items-center gap-2 hover:bg-[#F0ECE6] px-1.5 py-1 rounded-lg transition-colors group">
+          <span class="w-6 h-6 rounded-full text-white text-[11px] font-semibold flex items-center justify-center" style="background:linear-gradient(135deg,#7c3aed,#06b6d4)">{{ user.first_name[0]|upper if user and user.first_name else 'U' }}</span>
+          <span class="text-[13px] text-[#1F1E1D]">{{ user.first_name if user and user.first_name else 'User' }}</span>
+          <span class="text-[11px] text-[#8F8C86]">· Free</span>
+        </button>
+        <div class="flex items-center gap-1 text-[#8F8C86]">
+          <a href="/auth/logout" class="p-1 hover:text-[#1F1E1D] hover:bg-[#F0ECE6] rounded" title="Sign out"><span class="material-symbols-outlined text-[16px]">logout</span></a>
+          <button id="toggle-sidebar-btn" class="p-1 hover:text-[#1F1E1D] hover:bg-[#F0ECE6] rounded"><span class="material-symbols-outlined text-[16px]">dock_to_left</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+
+<!-- ══ MAIN SHELL ═══════════════════════════════════════════════ -->
+<div class="flex-1 flex flex-col h-full overflow-hidden">
+
+  <!-- Top bar -->
+  <header class="h-14 px-4 border-b border-[#E8E5DF] flex items-center justify-between bg-[#FAF9F6] z-10 flex-shrink-0">
+    <div class="flex items-center gap-2">
+      <button id="hamburger-btn" class="p-1.5 rounded-lg text-[#666461] hover:bg-[#F0ECE6] transition-colors"><span class="material-symbols-outlined text-[20px]">menu</span></button>
+      <div class="flex items-center gap-1.5 text-[13px]">
+        <a href="/resume/dashboard" class="text-[#8F8C86] hover:text-[#1F1E1D]">Dashboard</a>
+        <span class="text-[#CCC]">/</span>
+        <a href="/resume/library" class="text-[#8F8C86] hover:text-[#1F1E1D]">Resumes</a>
+        <span class="text-[#CCC]">/</span>
+        <span class="font-semibold text-[#1F1E1D]">{{ resume.title if resume else 'New Resume' }}</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <!-- Open preview drawer button -->
+      <button id="open-preview-btn"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#E8E5DF] bg-white text-[12.5px] font-medium text-[#1F1E1D] hover:bg-[#F5F3FF] hover:border-[#c4b5fd] hover:text-[#7c3aed] transition-all"
+              onclick="openPreview()">
+        <span class="material-symbols-outlined text-[16px]" style="font-variation-settings:'FILL' 1">article</span>
+        View Resume
+      </button>
+      <a href="/resume/library" class="px-3 py-1.5 rounded-xl border border-[#E8E5DF] bg-white text-[12.5px] font-medium text-[#666461] hover:bg-[#FAF9F6] transition-colors">All Resumes</a>
+    </div>
+  </header>
+
+  <!-- Three-panel body -->
+  <div class="flex-1 flex overflow-hidden">
+
+    <!-- ═══ PANEL 1: AI CHAT ═══════════════════════════════ -->
+    <div class="w-[330px] flex-shrink-0 flex flex-col border-r border-[#E8E5DF] bg-[#FBF9F7]">
+      <!-- Chat header -->
+      <div class="px-3.5 py-2.5 border-b border-[#EFECE6] bg-white">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg flex items-center justify-center shadow-xs" style="background:linear-gradient(135deg,#7c3aed,#06b6d4)">
+              <span class="material-symbols-outlined text-white text-[15px]" style="font-variation-settings:'FILL' 1">auto_awesome</span>
+            </div>
+            <div>
+              <div class="text-[13px] font-bold text-[#1F1E1D] flex items-center gap-1.5">
+                AI Resume Coach
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Live
+                </span>
+              </div>
+              <div class="text-[10px] text-[#8F8C86]">Powered by .env API keys</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Provider toggle -->
+        <div class="mt-2.5 flex items-center p-0.5 rounded-lg bg-[#F0EDE8] text-[11px] font-medium text-[#666461]">
+          <button type="button" onclick="setProvider('auto')" id="tab-auto" class="flex-1 py-1 rounded-md text-center transition-all bg-white text-[#1F1E1D] shadow-xs font-semibold">Auto</button>
+          <button type="button" onclick="setProvider('groq')" id="tab-groq" class="flex-1 py-1 rounded-md text-center transition-all hover:text-[#1F1E1D]">⚡ Groq</button>
+          <button type="button" onclick="setProvider('gemini')" id="tab-gemini" class="flex-1 py-1 rounded-md text-center transition-all hover:text-[#1F1E1D]">✦ Gemini</button>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div class="flex-1 overflow-y-auto px-3 py-3 flex flex-col gap-2.5" id="chat-messages">
+        <!-- Initial AI message -->
+        <div class="chat-bubble chat-ai msg-anim">
+          <div class="flex items-center justify-between text-[10.5px] text-[#8F8C86] mb-1.5 pb-1 border-b border-[#F0EDE8]">
+            <span class="chat-badge chat-badge-auto">✨ AI Coach</span>
+          </div>
+          👋 Hi! I'm your AI resume coach. I can <strong>build your resume from scratch</strong> or <strong>edit specific sections</strong> — just tell me what to change!<br><br>
+          Try: <em>"Change my summary to focus on leadership"</em> or <em>"Add Python to my skills"</em> or <em>"Rewrite bullets for my last job"</em> — I'll update the resume live. 🎯
+        </div>
+
+        <!-- Quick prompts -->
+        <div class="flex flex-col gap-1.5" id="quick-prompts">
+          <button type="button" onclick="sendQuickPrompt('Write a strong, ATS-friendly professional summary for my target job')" class="prompt-chip text-left px-3 py-2 rounded-xl border border-[#E8E5DF] bg-white text-[11.5px] text-[#4A4844] flex items-center justify-between group">
+            <span>✨ Write an ATS professional summary</span>
+            <span class="material-symbols-outlined text-[13px] text-[#8F8C86] group-hover:text-[#7c3aed] transition-colors">arrow_forward</span>
+          </button>
+          <button type="button" onclick="sendQuickPrompt('Rewrite the bullet points for my most recent job role with stronger action verbs and quantified impact')" class="prompt-chip text-left px-3 py-2 rounded-xl border border-[#E8E5DF] bg-white text-[11.5px] text-[#4A4844] flex items-center justify-between group">
+            <span>🎯 Rewrite my experience bullets stronger</span>
+            <span class="material-symbols-outlined text-[13px] text-[#8F8C86] group-hover:text-[#7c3aed] transition-colors">arrow_forward</span>
+          </button>
+          <button type="button" onclick="sendQuickPrompt('Add more relevant technical skills and keywords to my skills section based on my target role')" class="prompt-chip text-left px-3 py-2 rounded-xl border border-[#E8E5DF] bg-white text-[11.5px] text-[#4A4844] flex items-center justify-between group">
+            <span>🔍 Add ATS keywords to my skills</span>
+            <span class="material-symbols-outlined text-[13px] text-[#8F8C86] group-hover:text-[#7c3aed] transition-colors">arrow_forward</span>
+          </button>
+          <button type="button" onclick="sendQuickPrompt('Make my professional summary more impactful and ATS-optimized for my target role')" class="prompt-chip text-left px-3 py-2 rounded-xl border border-[#E8E5DF] bg-white text-[11.5px] text-[#4A4844] flex items-center justify-between group">
+            <span>✏️ Improve my summary for ATS</span>
+            <span class="material-symbols-outlined text-[13px] text-[#8F8C86] group-hover:text-[#7c3aed] transition-colors">arrow_forward</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Chat input -->
+      <div class="p-3 border-t border-[#EFECE6] bg-white">
+        <div class="flex items-end gap-2 bg-[#FAF9F7] border border-[#E8E5DF] rounded-xl px-3 py-2 focus-within:border-[#a78bfa] focus-within:bg-white focus-within:ring-1 focus-within:ring-[#a78bfa]/20 transition-all">
+          <textarea id="chat-input" rows="2"
+                    class="flex-1 resize-none bg-transparent border-none outline-none text-[12.5px] text-[#1F1E1D] placeholder-[#B0ACA6] font-sans"
+                    placeholder="Ask me to edit your resume… e.g. 'Change my summary' or 'Add Python to skills'"
+                    onkeydown="handleChatKey(event)"></textarea>
+          <button onclick="sendChat()"
+                  class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-white transition-all hover:opacity-90 active:scale-95 shadow-sm"
+                  style="background:linear-gradient(135deg,#7c3aed,#06b6d4)" id="send-btn" title="Send message">
+            <span class="material-symbols-outlined text-[16px]" style="font-variation-settings:'FILL' 1">send</span>
+          </button>
+        </div>
+        <div class="flex items-center justify-between text-[10px] text-[#8F8C86] mt-1.5 px-0.5">
+          <span id="active-model-indicator" class="flex items-center gap-1 font-medium text-[#7c3aed]">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Both Keys Ready
+          </span>
+          <span class="text-[#B0ACA6]">Shift+Enter for newline</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PANEL 2: FORM ═══════════════════════════════════ -->
+    <div class="flex-1 overflow-y-auto bg-[#FAF9F6]">
+      <form method="POST" action="/resume/new" id="resumeForm" class="px-5 py-5" onsubmit="event.preventDefault(); generateFullAiResume();">
+
+        <!-- Resume details -->
+        <div class="sc">
+          <div class="sc-title flex items-center justify-between">
+            <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[17px]" style="color:#7c3aed;font-variation-settings:'FILL' 1">badge</span>Resume Details</span>
+            <button type="button" onclick="generateFullAiResume()" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-[#7c3aed] bg-[#F5F3FF] border border-[#DDD6FE] hover:bg-[#EDE9FE] transition-all flex items-center gap-1 shadow-xs">
+              <span class="material-symbols-outlined text-[14px]">auto_fix_high</span> Auto-Fill Full Resume
+            </button>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="col-span-2"><label class="fl">Resume Title</label><input name="title" id="f-title" type="text" class="fi" placeholder="e.g. Software Engineer Resume" required oninput="syncPreview()"></div>
+            <div class="col-span-2"><label class="fl">Target Job / Role</label><input name="job_target" id="f-job-target" type="text" class="fi" placeholder="e.g. Full-Stack Software Engineer" oninput="syncPreview()"></div>
+            <div class="col-span-2">
+              <label class="fl flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[13px]" style="color:#7c3aed">description</span>
+                Job Description
+                <span class="ml-auto text-[9.5px] font-normal normal-case text-[#a78bfa] bg-[#F5F3FF] border border-[#DDD6FE] px-1.5 py-0.5 rounded-md">AI uses this to match keywords &amp; frameworks</span>
+              </label>
+              <textarea name="job_description" id="f-job-description" class="fi" style="min-height:90px" placeholder="Paste the full job description here. The AI will extract the key frameworks, languages, and tools required and tailor your resume to match them exactly…" oninput="syncPreview()"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Personal info -->
+        <div class="sc">
+          <div class="sc-title"><span class="material-symbols-outlined text-[17px]" style="color:#06b6d4;font-variation-settings:'FILL' 1">person</span>Personal Information</div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="fl">First Name</label><input name="first_name" id="f-first" type="text" class="fi" placeholder="Alex" oninput="syncPreview()"></div>
+            <div><label class="fl">Last Name</label><input name="last_name" id="f-last" type="text" class="fi" placeholder="Rivera" oninput="syncPreview()"></div>
+            <div class="col-span-2"><label class="fl">Email</label><input name="email" id="f-email" type="email" class="fi" placeholder="alex@email.com" oninput="syncPreview()"></div>
+            <div><label class="fl">Phone</label><input name="phone" id="f-phone" type="text" class="fi" placeholder="(555) 000-0000" oninput="syncPreview()"></div>
+            <div><label class="fl">Location</label><input name="location" id="f-location" type="text" class="fi" placeholder="Denver, CO" oninput="syncPreview()"></div>
+            <div class="col-span-2"><label class="fl">LinkedIn / Portfolio</label><input name="linkedin" id="f-linkedin" type="text" class="fi" placeholder="linkedin.com/in/alex" oninput="syncPreview()"></div>
+            <div class="col-span-2"><label class="fl">Professional Summary</label><textarea name="summary" id="f-summary" class="fi" placeholder="Brief 2–3 sentence high-impact career summary…" oninput="syncPreview()"></textarea></div>
+          </div>
+        </div>
+
+        <!-- Education (All Majors) -->
+        <div class="sc">
+          <div class="sc-title"><span class="material-symbols-outlined text-[17px]" style="color:#10b981;font-variation-settings:'FILL' 1">school</span>Education & Majors</div>
+          <div id="edu-list"></div>
+          <button type="button" class="add-btn" onclick="addEdu()"><span class="material-symbols-outlined text-[15px]">add</span> Add Education</button>
+        </div>
+
+        <!-- Experience -->
+        <div class="sc">
+          <div class="sc-title"><span class="material-symbols-outlined text-[17px]" style="color:#D97757;font-variation-settings:'FILL' 1">work</span>Work Experience</div>
+          <div id="exp-list"></div>
+          <button type="button" class="add-btn" onclick="addExp()"><span class="material-symbols-outlined text-[15px]">add</span> Add Experience</button>
+        </div>
+
+        <!-- Projects (All Majors) -->
+        <div class="sc">
+          <div class="sc-title"><span class="material-symbols-outlined text-[17px]" style="color:#3b82f6;font-variation-settings:'FILL' 1">rocket_launch</span>Projects & Capstones (All Majors)</div>
+          <div id="proj-list"></div>
+          <button type="button" class="add-btn" onclick="addProj()"><span class="material-symbols-outlined text-[15px]">add</span> Add Project</button>
+        </div>
+
+        <!-- Skills -->
+        <div class="sc">
+          <div class="sc-title"><span class="material-symbols-outlined text-[17px]" style="color:#8b5cf6;font-variation-settings:'FILL' 1">psychology</span>Skills & Competencies</div>
+          <label class="fl">Technical / Domain Skills</label>
+          <textarea name="skills_technical" id="f-skills" class="fi" style="min-height:55px" placeholder="Languages: Python, Java, SQL | Frameworks: React, Flask, Node.js…" oninput="syncPreview()"></textarea>
+          <label class="fl mt-3 block">Tools, Frameworks & Soft Skills</label>
+          <textarea name="skills_soft" id="f-skills-soft" class="fi mt-1" style="min-height:45px" placeholder="Tools: Git, Docker, AWS | Competencies: Agile, REST APIs, CI/CD…" oninput="syncPreview()"></textarea>
+        </div>
+
+        <!-- Generate -->
+        <div class="flex items-center gap-3 pb-8">
+          <button type="button" onclick="generateFullAiResume()" class="btn-gen" id="submitBtn">
+            <span class="material-symbols-outlined text-[17px]" style="font-variation-settings:'FILL' 1">auto_awesome</span>
+            Generate with AI
+          </button>
+          <span class="text-[11.5px] text-[#8F8C86]">AI writes the entire resume & updates the LaTeX preview</span>
+        </div>
+
+      </form>
+    </div>
+
+  </div><!-- /three-panel -->
+</div><!-- /main -->
+
+
+<!-- ══ RIGHT PREVIEW DRAWER ══════════════════════════════════════ -->
+<div id="preview-drawer" class="fixed inset-y-0 right-0 w-[540px] bg-white border-l border-[#E8E5DF] shadow-2xl z-50 flex flex-col">
+  <!-- Drawer header -->
+  <div class="h-14 px-4 border-b border-[#E8E5DF] flex items-center justify-between bg-[#FBF9F7] flex-shrink-0">
+    <div class="flex items-center gap-2.5">
+      <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:rgba(217,119,87,.12);border:1px solid rgba(217,119,87,.2)">
+        <span class="material-symbols-outlined text-[15px]" style="color:#D97757;font-variation-settings:'FILL' 1">article</span>
+      </div>
+      <div>
+        <div class="text-[13px] font-semibold text-[#1F1E1D] flex items-center gap-1.5">
+          Resume Preview
+          <span class="text-[9.5px] px-1.5 py-0.2 rounded-md bg-[#EDE8E1] text-[#666461] font-mono">Overleaf ATS</span>
+        </div>
+        <div class="text-[10px] text-[#8F8C86]">Live LaTeX Rendering</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-1.5 text-[#8F8C86]">
+      <button id="pdf-download-btn"
+         onclick="downloadAsPDF()"
+         class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[#E8E5DF] bg-white text-[11.5px] font-medium text-[#1F1E1D] hover:bg-[#F5F3FF] hover:border-[#c4b5fd] hover:text-[#7c3aed] transition-colors"
+         title="Download as PDF — matches the preview exactly">
+        <span class="material-symbols-outlined text-[15px] text-[#7c3aed]">download</span>
+        PDF
+      </button>
+      <button class="p-1.5 rounded-lg hover:bg-[#EFECE6] hover:text-[#1F1E1D] transition-colors" title="Print resume" onclick="downloadAsPDF()">
+        <span class="material-symbols-outlined text-[18px]">print</span>
+      </button>
+      <button class="p-1.5 rounded-lg hover:bg-[#EFECE6] hover:text-[#1F1E1D] transition-colors" onclick="closePreview()">
+        <span class="material-symbols-outlined text-[18px]">close</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Format Bar -->
+  <div class="px-4 py-2 border-b border-[#E8E5DF] bg-[#FAF9F6] flex items-center justify-between text-[11px] text-[#666461] flex-shrink-0">
+    <span class="flex items-center gap-1.5 font-semibold text-[#1F1E1D]">
+      <span class="px-1.5 py-0.5 rounded bg-black text-white font-mono text-[9px]">TeX</span>
+      ATS-Friendly Technical Resume &middot; Standard Overleaf Format
+    </span>
+    <span class="text-[10px] text-[#8F8C86] font-mono">pdflatex / 0.5in margins</span>
+  </div>
+
+  <!-- Resume sheet inside drawer -->
+  <div class="flex-1 overflow-y-auto p-5 bg-[#F4F2EE]">
+    <div class="latex-paper rounded-sm p-7 text-[#111]" id="resume-sheet" style="font-family:'Times New Roman', Times, serif;font-size:10px;line-height:1.45;min-height:760px;background:#ffffff;border:1px solid #D9D5CF;box-shadow:0 4px 20px rgba(0,0,0,.08);color:#111;">
+
+      <!-- Header -->
+      <div class="rv-name" id="rv-name" contenteditable="true" title="Click to edit name">Your Name</div>
+      <div class="rv-target-role" id="rv-target-role" contenteditable="true" title="Click to edit target role" style="font-size:12px;font-weight:700;letter-spacing:.02em;margin-bottom:3px;text-align:center;color:#111;font-family:Georgia,'Times New Roman',serif;display:none;"></div>
+      <div class="rv-contact" id="rv-contact" contenteditable="true" title="Click to edit contact">email • phone • location • linkedin</div>
+
+      <!-- Summary -->
+      <div id="rv-summary-sec">
+        <div class="rv-sec-title">Summary</div>
+        <div class="text-[9.5px] text-[#222] leading-relaxed text-justify mb-2 rv-editable" id="rv-summary" contenteditable="true" title="Click to edit summary"></div>
+      </div>
+
+      <!-- Professional Experience (Image 5 ATS Standard) -->
+      <div id="rv-exp-sec">
+        <div class="rv-sec-title">Professional Experience</div>
+        <div id="rv-exp" class="rv-editable" contenteditable="true" title="Click to edit experience"></div>
+      </div>
+
+      <!-- Education -->
+      <div id="rv-edu-sec">
+        <div class="rv-sec-title">Education</div>
+        <div id="rv-edu" class="rv-editable" contenteditable="true" title="Click to edit education"></div>
+      </div>
+
+      <!-- Projects -->
+      <div id="rv-proj-sec">
+        <div class="rv-sec-title">Projects &amp; Capstones</div>
+        <div id="rv-proj" class="rv-editable" contenteditable="true" title="Click to edit projects"></div>
+      </div>
+
+      <!-- Additional Information / Skills -->
+      <div id="rv-skills-sec">
+        <div class="rv-sec-title">Additional Information</div>
+        <div class="text-[9.5px] text-[#222] leading-relaxed rv-editable" id="rv-skills" contenteditable="true" title="Click to edit skills"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drawer footer -->
+  <div class="px-4 py-3 border-t border-[#E8E5DF] bg-[#FBF9F7] flex items-center justify-between flex-shrink-0">
+    <span class="text-[11.5px] text-[#8F8C86]">Updates live in LaTeX format</span>
+    <button onclick="generateFullAiResume()" id="drawer-gen-btn"
+            class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12.5px] font-semibold text-white transition-all hover:opacity-90 shadow-sm"
+            style="background:linear-gradient(135deg,#7c3aed,#06b6d4)">
+      <span class="material-symbols-outlined text-[15px]" style="font-variation-settings:'FILL' 1">auto_awesome</span>
+      Generate AI Resume
+    </button>
+  </div>
+</div>
+
+<!-- Overlay -->
+<div id="drawer-overlay" onclick="closePreview()"
+     class="fixed inset-0 bg-black/20 z-40 hidden transition-opacity"></div>
+
+
+<script>
+/* ── Sidebar ── */
+
+/* ── Contenteditable Preview → Form sync ── */
+(function setupPreviewEditing() {
+  // Sync summary edits back to the summary textarea
+  const rvSummary = document.getElementById('rv-summary');
+  if (rvSummary) {
+    rvSummary.addEventListener('input', () => {
+      const ta = document.getElementById('f-summary');
+      if (ta) ta.value = rvSummary.innerText.trim();
+      showEditedBadge();
+    });
+  }
+
+  // Sync name edits back to first/last fields
+  const rvName = document.getElementById('rv-name');
+  if (rvName) {
+    rvName.addEventListener('input', () => {
+      const raw = rvName.innerText.trim();
+      const parts = raw.split(/\s+/);
+      const fnEl = document.getElementById('f-first');
+      const lnEl = document.getElementById('f-last');
+      if (fnEl && lnEl) {
+        if (parts.length >= 2) {
+          fnEl.value = parts.slice(0, -1).join(' ');
+          lnEl.value = parts[parts.length - 1];
+        } else {
+          fnEl.value = raw;
+          lnEl.value = '';
+        }
+      }
+      showEditedBadge();
+    });
+  }
+
+  // Generic edit badge for other sections (exp, edu, skills, projects)
+  ['rv-exp', 'rv-edu', 'rv-proj', 'rv-skills', 'rv-contact'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', showEditedBadge);
+  });
+})();
+
+let _editBadgeTimer = null;
+function showEditedBadge() {
+  const header = document.querySelector('#preview-drawer .flex.items-center.gap-2\\.5');
+  if (!header) return;
+  let badge = document.getElementById('preview-edit-badge');
+  if (!badge) {
+    badge = document.createElement('span');
+    badge.id = 'preview-edit-badge';
+    badge.style.cssText = 'font-size:9.5px;font-weight:600;color:#7c3aed;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.25);padding:1px 7px;border-radius:5px;margin-left:6px;transition:opacity .3s;';
+    header.appendChild(badge);
+  }
+  badge.textContent = '✎ Edited';
+  badge.style.opacity = '1';
+  clearTimeout(_editBadgeTimer);
+  _editBadgeTimer = setTimeout(() => { badge.style.opacity = '0'; }, 3500);
+}
+
+
+const sidebar = document.getElementById('sidebar');
+document.getElementById('hamburger-btn')?.addEventListener('click', () => sidebar.classList.toggle('hidden'));
+document.getElementById('toggle-sidebar-btn')?.addEventListener('click', () => sidebar.classList.toggle('hidden'));
+
+/* ── Preview drawer ── */
+function openPreview() {
+  document.getElementById('preview-drawer').classList.add('open');
+  document.getElementById('drawer-overlay').classList.remove('hidden');
+  syncPreview();
+}
+function closePreview() {
+  document.getElementById('preview-drawer').classList.remove('open');
+  document.getElementById('drawer-overlay').classList.add('hidden');
+}
+
+/* ── Resume Data State ── */
+const INITIAL_RESUME_DATA = {{ initial_data | tojson if initial_data else 'null' }};
+let RESUME_ID = {{ resume.id if resume else 'null' }};
+let lastResumeData = null;
+
+const DEFAULT_RESUME_SAMPLE = {
+  title: "Software Engineer Resume",
+  job_target: "Full-Stack Software Engineer",
+  first_name: "Alex",
+  last_name: "Rivera",
+  email: "alex.rivera@email.com",
+  phone: "(555) 019-2834",
+  location: "Denver, CO",
+  linkedin: "linkedin.com/in/alex-rivera",
+  summary: "Results-driven Software Engineer with strong foundations in full-stack web development, distributed systems, and cloud architecture. Proven track record transforming unorganized requirements into high-performance, ATS-compliant systems, optimizing database pipelines, and delivering scalable microservices.",
+  education: [
+    {
+      school: "Metropolitan State University of Denver",
+      degree: "B.S. in Computer Science",
+      year: "2026",
+      dates: "2022 – 2026",
+      gpa: "3.85 / 4.0",
+      coursework: "Data Structures & Algorithms, Systems Programming, Database Systems, Cloud Computing"
+    }
+  ],
+  experience: [
+    {
+      title: "Software Engineering Intern",
+      company: "Apex Cloud Technologies",
+      dates: "May 2024 – Aug 2024",
+      location: "Denver, CO",
+      bullets: [
+        "Architected and deployed RESTful microservices in Python, Flask, and PostgreSQL handling 60,000+ daily requests with 99.95% uptime",
+        "Decreased SQL query latency by 38% through index restructuring, query optimization, and Redis caching layers",
+        "Engineered automated CI/CD testing pipelines in Docker and GitHub Actions, reducing deployment cycle times by 45%"
+      ]
+    },
+    {
+      title: "Undergraduate CS Teaching Assistant",
+      company: "Department of Computer Science",
+      dates: "Aug 2023 – Present",
+      location: "Denver, CO",
+      bullets: [
+        "Mentored 75+ undergraduate students in data structures, OOP design patterns, and algorithmic complexity",
+        "Conducted weekly debugging workshops and code review sessions improving assignment pass rates by 22%"
+      ]
+    }
+  ],
+  projects: [
+    {
+      name: "AI-Powered Technical Resume Builder",
+      tech: "Python, Flask, PostgreSQL, Docker, ReportLab, LaTeX",
+      bullets: [
+        "Engineered full-stack resume compilation engine integrating Groq and Gemini dual-AI fallbacks for automated ATS optimization",
+        "Implemented real-time LaTeX document rendering and sub-second PDF generation pipeline for active learners"
+      ]
+    },
+    {
+      name: "Distributed Task Management Platform",
+      tech: "React, Node.js, Express, PostgreSQL, Redis",
+      bullets: [
+        "Built full-stack task automation system cutting team workflow tracking overhead by 35% through real-time state synchronization",
+        "Designed secure JWT token authentication with RBAC and encrypted session management"
+      ]
+    }
+  ],
+  skills: {
+    "Languages": ["Python", "Java", "C++", "JavaScript", "TypeScript", "SQL", "HTML/CSS"],
+    "Frameworks & Libraries": ["React", "Flask", "Node.js", "Express", "TailwindCSS"],
+    "Developer Tools & Cloud": ["Git", "Docker", "AWS", "PostgreSQL", "Linux", "Redis", "CI/CD"],
+    "Core Competencies": ["RESTful APIs", "System Architecture", "Agile/Scrum", "Data Structures"]
+  }
+};
+
+/* ── Live preview sync ── */
+function $v(id) { return (document.getElementById(id)?.value || '').trim(); }
+
+function escapeHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function showToast(msg) {
+  let toast = document.getElementById('app-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'app-toast';
+    toast.className = 'fixed bottom-5 right-5 z-50 bg-[#1F1E1D] text-white px-4 py-2.5 rounded-xl shadow-2xl text-[12.5px] font-medium flex items-center gap-2 border border-white/10 transition-all duration-300 transform translate-y-12 opacity-0 pointer-events-none';
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = `<span class="material-symbols-outlined text-[16px] text-emerald-400">check_circle</span> ${msg}`;
+  toast.classList.remove('translate-y-12', 'opacity-0', 'pointer-events-none');
+  setTimeout(() => {
+    toast.classList.add('translate-y-12', 'opacity-0', 'pointer-events-none');
+  }, 4000);
+}
+
+function syncPreview() {
+  const fn = $v('f-first'), ln = $v('f-last');
+  const name = [fn, ln].filter(Boolean).join(' ');
+  document.getElementById('rv-name').textContent = (name || 'Your Name').toUpperCase();
+
+  /* Target Job Subtitle beneath Name (Image 5 standard) */
+  const targetRole = $v('f-job-target') || (lastResumeData?.job_target || lastResumeData?.title || '');
+  const roleEl = document.getElementById('rv-target-role');
+  if (roleEl) {
+    roleEl.textContent = targetRole;
+    roleEl.style.display = targetRole ? '' : 'none';
+  }
+
+  const contactParts = [$v('f-location'), $v('f-email'), $v('f-phone'), $v('f-linkedin')].filter(Boolean);
+  document.getElementById('rv-contact').textContent = contactParts.join('  •  ') || 'Denver, CO  •  email@example.com  •  (555) 000-0000  •  linkedin.com/in/alex';
+
+  /* Summary */
+  const summary = $v('f-summary');
+  const summaryEl = document.getElementById('rv-summary');
+  const summarySec = document.getElementById('rv-summary-sec');
+  summaryEl.textContent = summary || (lastResumeData?.summary || '');
+  summarySec.style.display = (summary || lastResumeData?.summary) ? '' : 'none';
+
+  /* Professional Experience (Image 5 standard: rich bullets, company + dates aligned) */
+  const expList = document.getElementById('exp-list');
+  const rvExp   = document.getElementById('rv-exp');
+  const rvExpSec = document.getElementById('rv-exp-sec');
+  rvExp.innerHTML = '';
+  let hasExp = false;
+  expList.querySelectorAll('.eb').forEach(b => {
+    const t = b.querySelector('input[name="exp_title[]"]')?.value.trim();
+    const c = b.querySelector('input[name="exp_company[]"]')?.value.trim();
+    const d = b.querySelector('input[name="exp_dates[]"]')?.value.trim();
+    const bl = b.querySelector('textarea[name="exp_bullets[]"]')?.value.trim();
+    const desc = b.querySelector('textarea[name="exp_desc[]"]')?.value.trim();
+    if (!t && !c && !desc) return;
+    hasExp = true;
+
+    // Bullet points to render
+    let bulletsList = [];
+    if (bl) {
+      bulletsList = bl.split('\n').map(l => l.trim()).filter(Boolean);
+    } else if (desc) {
+      // If user provided a role description, split into clean preliminary bullets so the preview is never blank!
+      bulletsList = desc.split(/(?<=[.!?])\s+/).map(l => l.trim()).filter(l => l.length > 5);
+      if (bulletsList.length === 0) bulletsList = [desc];
+    }
+
+    const div = document.createElement('div');
+    div.className = 'rv-entry';
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <span class="rv-company">${escapeHtml(c || t || '')}</span>
+        <span class="rv-loc">${escapeHtml(b.dataset.location || '')}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
+        <span class="rv-title">${escapeHtml(t || '')}</span>
+        <span class="rv-dates">${escapeHtml(d || '')}</span>
+      </div>
+      ${bulletsList.length > 0 ? `<ul class="rv-bullet">${bulletsList.map(l => `<li>${escapeHtml(l.replace(/^[•\-*]\s*/, ''))}</li>`).join('')}</ul>` : ''}
+    `;
+    rvExp.appendChild(div);
+  });
+  rvExpSec.style.display = hasExp ? '' : 'none';
+
+  /* Education */
+  const eduList = document.getElementById('edu-list');
+  const rvEdu   = document.getElementById('rv-edu');
+  const rvEduSec = document.getElementById('rv-edu-sec');
+  rvEdu.innerHTML = '';
+  let hasEdu = false;
+  eduList.querySelectorAll('.eb').forEach(b => {
+    const s = b.querySelector('input[name="edu_school[]"]')?.value.trim();
+    const deg = b.querySelector('input[name="edu_degree[]"]')?.value.trim();
+    const y = b.querySelector('input[name="edu_year[]"]')?.value.trim();
+    const g = b.querySelector('input[name="edu_gpa[]"]')?.value.trim();
+    if (!s && !deg) return;
+    hasEdu = true;
+    const div = document.createElement('div');
+    div.className = 'rv-edu-entry';
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <span class="rv-school">${escapeHtml(s||'')}</span>
+        <span class="rv-year">${escapeHtml(y||'')}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <span class="rv-degree">${escapeHtml(deg||'')}</span>
+        ${g ? `<span class="rv-gpa">&mdash; ${escapeHtml(g)}</span>` : ''}
+      </div>
+    `;
+    rvEdu.appendChild(div);
+  });
+  rvEduSec.style.display = hasEdu ? '' : 'none';
+
+  /* Projects (All Majors) */
+  const projList = document.getElementById('proj-list');
+  const rvProj   = document.getElementById('rv-proj');
+  const rvProjSec = document.getElementById('rv-proj-sec');
+  let hasProj = false;
+  if (projList && rvProj && rvProjSec) {
+    rvProj.innerHTML = '';
+    projList.querySelectorAll('.eb').forEach(b => {
+      const n = b.querySelector('input[name="proj_name[]"]')?.value.trim();
+      const t = b.querySelector('input[name="proj_tech[]"]')?.value.trim();
+      const bl = b.querySelector('textarea[name="proj_bullets[]"]')?.value.trim();
+      if (!n && !t) return;
+      hasProj = true;
+      const div = document.createElement('div');
+      div.style.marginBottom = '7px';
+      div.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <span class="rv-entry-title">${escapeHtml(n||'')}</span>
+          <span class="rv-entry-sub" style="font-style:italic;color:#333">${escapeHtml(t||'')}</span>
+        </div>
+        ${bl ? `<ul class="rv-bullet">${bl.split('\n').filter(l=>l.trim()).map(l=>`<li>${escapeHtml(l.replace(/^[•\-*]\s*/,''))}</li>`).join('')}</ul>` : ''}
+      `;
+      rvProj.appendChild(div);
+    });
+    rvProjSec.style.display = hasProj ? '' : 'none';
+  }
+
+  /* Additional Information / Skills (Image 5 standard: bulleted categories) */
+  const techSkills = $v('f-skills');
+  const softSkills = $v('f-skills-soft');
+  const skillsEl = document.getElementById('rv-skills');
+  const skillsSec = document.getElementById('rv-skills-sec');
+  let skillItems = [];
+
+  const parseParts = (str, defaultCategory) => {
+    if (!str) return [];
+    return str.split('|').map(p => p.trim()).filter(Boolean).map(p => {
+      if (p.includes(':')) {
+        const [k, ...rest] = p.split(':');
+        return { cat: k.trim(), items: rest.join(':').trim() };
+      }
+      return { cat: defaultCategory, items: p };
+    });
+  };
+
+  if (techSkills || softSkills) {
+    const tParts = parseParts(techSkills, 'Technical Skills');
+    const sParts = parseParts(softSkills, 'Core Competencies');
+    skillItems = [...tParts, ...sParts];
+  } else if (lastResumeData?.skills) {
+    if (typeof lastResumeData.skills === 'object' && !Array.isArray(lastResumeData.skills)) {
+      for (const [k, v] of Object.entries(lastResumeData.skills)) {
+        skillItems.push({ cat: k, items: Array.isArray(v) ? v.join(', ') : v });
+      }
+    } else {
+      skillItems.push({ cat: 'Technical Skills', items: Array.isArray(lastResumeData.skills) ? lastResumeData.skills.join(', ') : lastResumeData.skills });
+    }
+  }
+
+  if (skillItems.length > 0) {
+    skillsEl.innerHTML = `<ul class="rv-bullet" style="margin-top:2px">${skillItems.map(item => `<li><strong>${escapeHtml(item.cat)}:</strong> ${escapeHtml(item.items)}</li>`).join('')}</ul>`;
+    skillsSec.style.display = '';
+  } else {
+    skillsSec.style.display = 'none';
+  }
+}
+
+/* ── Form Entries ── */
+let ec = 0;
+function addExp(data = {}) {
+  const id = `exp-${ec++}`;
+  const t = data.title || '';
+  const c = data.company || '';
+  const d = data.dates || '';
+  const b = data.bullets || '';
+  document.getElementById('exp-list').insertAdjacentHTML('beforeend', `
+  <div class="eb" id="${id}">
+    <button type="button" class="rm-btn" onclick="rem('${id}')"><span class="material-symbols-outlined text-[13px]">close</span></button>
+    <div class="grid grid-cols-2 gap-2.5">
+      <div class="col-span-2"><label class="fl">Job Title</label><input name="exp_title[]" type="text" class="fi" placeholder="Project Manager / Security Officer" value="${escapeHtml(t)}" oninput="syncPreview()"></div>
+      <div><label class="fl">Company</label><input name="exp_company[]" type="text" class="fi" placeholder="Company Name" value="${escapeHtml(c)}" oninput="syncPreview()"></div>
+      <div><label class="fl">Dates</label><input name="exp_dates[]" type="text" class="fi" placeholder="2019 – Present" value="${escapeHtml(d)}" oninput="syncPreview()"></div>
+      <div class="col-span-2">
+        <div class="flex items-center justify-between mb-1">
+          <label class="fl flex items-center gap-1">
+            <span class="material-symbols-outlined text-[12px]" style="color:#D97757">work</span>
+            Role Description <span class="text-[9.5px] font-normal text-[#B0ACA6] ml-1">(AI uses this to generate tailored bullets)</span>
+          </label>
+          <button type="button" class="gen-bullets-btn text-[11px] font-semibold text-[#7c3aed] bg-[#7c3aed]/10 hover:bg-[#7c3aed]/20 px-2 py-0.5 rounded flex items-center gap-1 transition-colors" onclick="generateRoleBullets('${id}')">
+            <span class="material-symbols-outlined text-[13px]">auto_awesome</span> AI Generate Bullets
+          </button>
+        </div>
+        <textarea name="exp_desc[]" class="fi" style="min-height:48px" placeholder="Briefly describe what this role involved, what tools you used, or paste your responsibilities…" oninput="syncPreview()">${escapeHtml(data.description || '')}</textarea>
+      </div>
+      <div class="col-span-2">
+        <label class="fl">Achievements &amp; Bullets</label>
+        <textarea name="exp_bullets[]" class="fi" style="min-height:65px" placeholder="• Spearheaded risk mitigation strategies...&#10;• Coordinated cross-functional communication...&#10;(AI will generate 3-4 bullets from your Role Description or click 'AI Generate Bullets')" oninput="syncPreview()">${escapeHtml(b)}</textarea>
+      </div>
+    </div>
+  </div>`);
+  syncPreview();
+}
+
+async function generateRoleBullets(cardId) {
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  const title = card.querySelector('input[name="exp_title[]"]')?.value.trim() || '';
+  const company = card.querySelector('input[name="exp_company[]"]')?.value.trim() || '';
+  const desc = card.querySelector('textarea[name="exp_desc[]"]')?.value.trim() || '';
+  const bulletsEl = card.querySelector('textarea[name="exp_bullets[]"]');
+  const btn = card.querySelector('.gen-bullets-btn');
+
+  if (!desc && !title) {
+    showToast('⚠️ Please enter a Job Title or Role Description first.');
+    return;
+  }
+
+  const origText = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined text-[13px] animate-spin">autorenew</span> Generating…';
+  }
+
+  try {
+    const res = await fetch('/resume/api/generate-bullets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: title,
+        company: company,
+        description: desc,
+        job_target: $v('f-job-target'),
+        job_description: $v('f-job-description'),
+        provider: activeProvider
+      })
+    });
+    const data = await res.json();
+    if (data.success && data.bullets && data.bullets.length > 0) {
+      bulletsEl.value = data.bullets.map(b => '• ' + b.replace(/^[•\-*]\s*/, '')).join('\n');
+      syncPreview();
+      showToast('✨ Generated 3-4 professional ATS bullet points!');
+    } else {
+      showToast('❌ Could not generate bullets: ' + (data.error || 'Please try again.'));
+    }
+  } catch (err) {
+    console.error('Bullet gen error:', err);
+    showToast('❌ Network error generating bullets.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origText;
+    }
+  }
+}
+
+let dc = 0;
+function addEdu(data = {}) {
+  const id = `edu-${dc++}`;
+  const s = data.school || '';
+  const deg = data.degree || '';
+  const y = data.year || data.dates || '';
+  const g = data.gpa || '';
+  document.getElementById('edu-list').insertAdjacentHTML('beforeend', `
+  <div class="eb" id="${id}">
+    <button type="button" class="rm-btn" onclick="rem('${id}')"><span class="material-symbols-outlined text-[13px]">close</span></button>
+    <div class="grid grid-cols-2 gap-2.5">
+      <div class="col-span-2"><label class="fl">Institution / University</label><input name="edu_school[]" type="text" class="fi" placeholder="Stanford University" value="${escapeHtml(s)}" oninput="syncPreview()"></div>
+      <div><label class="fl">Degree &amp; Major</label><input name="edu_degree[]" type="text" class="fi" placeholder="B.S. in Computer Science / High School Diploma" value="${escapeHtml(deg)}" oninput="syncPreview()"></div>
+      <div><label class="fl">Graduation Year / Dates</label><input name="edu_year[]" type="text" class="fi" placeholder="2025" value="${escapeHtml(y)}" oninput="syncPreview()"></div>
+      <div class="col-span-2"><label class="fl">GPA / Honors / Coursework</label><input name="edu_gpa[]" type="text" class="fi" placeholder="GPA: 3.5 · Honors · Relevant Coursework" value="${escapeHtml(g)}" oninput="syncPreview()"></div>
+    </div>
+  </div>`);
+  syncPreview();
+}
+
+let pc = 0;
+function addProj(data = {}) {
+  const id = `proj-${pc++}`;
+  const n = data.name || '';
+  const t = data.tech || '';
+  const b = data.bullets || '';
+  document.getElementById('proj-list').insertAdjacentHTML('beforeend', `
+  <div class="eb" id="${id}">
+    <button type="button" class="rm-btn" onclick="rem('${id}')"><span class="material-symbols-outlined text-[13px]">close</span></button>
+    <div class="grid grid-cols-2 gap-2.5">
+      <div class="col-span-2"><label class="fl">Project / Capstone Name</label><input name="proj_name[]" type="text" class="fi" placeholder="e.g. AI Resume Builder / Portfolio" value="${escapeHtml(n)}" oninput="syncPreview()"></div>
+      <div class="col-span-2"><label class="fl">Technologies / Tools / Methods</label><input name="proj_tech[]" type="text" class="fi" placeholder="e.g. Python, Flask, PostgreSQL" value="${escapeHtml(t)}" oninput="syncPreview()"></div>
+      <div class="col-span-2"><label class="fl">Project Highlights &amp; Accomplishments</label><textarea name="proj_bullets[]" class="fi" style="min-height:58px" placeholder="• Designed and deployed system with 99.9% uptime..." oninput="syncPreview()">${escapeHtml(b)}</textarea></div>
+    </div>
+  </div>`);
+  syncPreview();
+}
+
+function rem(id) { document.getElementById(id)?.remove(); syncPreview(); }
+
+/* ── Full AI Generation Engine ── */
+async function generateFullAiResume() {
+  const btnDrawer = document.getElementById('drawer-gen-btn');
+  const btnForm = document.getElementById('submitBtn');
+
+  const origDrawerText = btnDrawer ? btnDrawer.innerHTML : '';
+  const origFormText = btnForm ? btnForm.innerHTML : '';
+
+  if (btnDrawer) {
+    btnDrawer.disabled = true;
+    btnDrawer.innerHTML = '<span class="material-symbols-outlined text-[14px] animate-spin">autorenew</span> Writing Full Resume…';
+  }
+  if (btnForm) {
+    btnForm.disabled = true;
+    btnForm.innerHTML = '<span class="material-symbols-outlined text-[16px] animate-spin">autorenew</span> AI Generating…';
+  }
+
+  showToast('✨ AI is crafting and formatting your complete ATS resume…');
+
+  const experiences = [];
+  document.querySelectorAll('#exp-list .eb').forEach(b => {
+    const t = b.querySelector('input[name="exp_title[]"]')?.value.trim() || '';
+    const c = b.querySelector('input[name="exp_company[]"]')?.value.trim() || '';
+    const d = b.querySelector('input[name="exp_dates[]"]')?.value.trim() || '';
+    const desc = b.querySelector('textarea[name="exp_desc[]"]')?.value.trim() || '';
+    const bl = b.querySelector('textarea[name="exp_bullets[]"]')?.value.trim() || '';
+    if (t || c || desc) {
+      experiences.push({ title: t, company: c, dates: d, description: desc, bullets: bl });
+    }
+  });
+
+  const educations = [];
+  document.querySelectorAll('#edu-list .eb').forEach(b => {
+    const s = b.querySelector('input[name="edu_school[]"]')?.value.trim() || '';
+    const deg = b.querySelector('input[name="edu_degree[]"]')?.value.trim() || '';
+    const y = b.querySelector('input[name="edu_year[]"]')?.value.trim() || '';
+    const g = b.querySelector('input[name="edu_gpa[]"]')?.value.trim() || '';
+    if (s || deg) {
+      educations.push({ school: s, degree: deg, year: y, gpa: g });
+    }
+  });
+
+  const projects = [];
+  document.querySelectorAll('#proj-list .eb').forEach(b => {
+    const n = b.querySelector('input[name="proj_name[]"]')?.value.trim() || '';
+    const t = b.querySelector('input[name="proj_tech[]"]')?.value.trim() || '';
+    const bl = b.querySelector('textarea[name="proj_bullets[]"]')?.value.trim() || '';
+    if (n || t) {
+      projects.push({ name: n, tech: t, bullets: bl });
+    }
+  });
+
+  const payload = {
+    resume_id: RESUME_ID,
+    provider: activeProvider,
+    title: $v('f-title'),
+    job_target: $v('f-job-target'),
+    job_description: $v('f-job-description'),
+    first_name: $v('f-first'),
+    last_name: $v('f-last'),
+    email: $v('f-email'),
+    phone: $v('f-phone'),
+    location: $v('f-location'),
+    linkedin: $v('f-linkedin'),
+    summary: $v('f-summary'),
+    skills_technical: $v('f-skills'),
+    skills_soft: $v('f-skills-soft'),
+    experience: experiences,
+    education: educations,
+    projects: projects,
+  };
+
+  try {
+    const res = await fetch('/resume/api/generate-full', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success && data.resume_data) {
+      if (data.resume_id) RESUME_ID = data.resume_id;
+      populateForm(data.resume_data);
+      openPreview();
+      if (data.pdf_url) {
+        document.getElementById('pdf-download-btn')?.setAttribute('href', data.pdf_url);
+      }
+      showToast('🎉 Complete ATS resume generated & LaTeX preview updated!');
+    } else {
+      showToast('❌ Generation error: ' + (data.error || 'Please try again.'));
+    }
+  } catch (err) {
+    console.error('Generation error:', err);
+    showToast('❌ Network error. Please check server connection.');
+  } finally {
+    if (btnDrawer) {
+      btnDrawer.disabled = false;
+      btnDrawer.innerHTML = origDrawerText;
+    }
+    if (btnForm) {
+      btnForm.disabled = false;
+      btnForm.innerHTML = origFormText;
+    }
+  }
+}
+
+/* ── Smart Merge Engine ── */
+function smartMerge(aiData) {
+  if (!aiData) return [];
+
+  let changed = [];
+
+  // ── Scalar fields — overwrite if AI returned non-empty ──
+  const scalarMap = {
+    'title': 'f-title', 'job_target': 'f-job-target',
+    'first_name': 'f-first', 'last_name': 'f-last',
+    'email': 'f-email', 'phone': 'f-phone',
+    'location': 'f-location', 'linkedin': 'f-linkedin', 'summary': 'f-summary'
+  };
+  for (const [key, fieldId] of Object.entries(scalarMap)) {
+    const val = aiData[key];
+    if (val && typeof val === 'string' && val.trim()) {
+      const el = document.getElementById(fieldId);
+      if (el && el.value.trim() !== val.trim()) {
+        el.value = val.trim();
+        if (!changed.includes(key)) changed.push(key);
+      }
+    }
+  }
+
+  // ── Skills ──
+  if (aiData.skills && typeof aiData.skills === 'object' && Object.keys(aiData.skills).length > 0) {
+    let techParts = [], softParts = [];
+    for (const [cat, items] of Object.entries(aiData.skills)) {
+      const itemStr = Array.isArray(items) ? items.join(', ') : String(items);
+      const catLower = cat.toLowerCase();
+      if (catLower.includes('soft') || catLower.includes('competenc') || catLower.includes('lead') || catLower.includes('inter')) {
+        softParts.push(`${cat}: ${itemStr}`);
+      } else {
+        techParts.push(`${cat}: ${itemStr}`);
+      }
+    }
+    const techEl = document.getElementById('f-skills');
+    const softEl = document.getElementById('f-skills-soft');
+    const newTech = techParts.join(' | ');
+    const newSoft = softParts.join(' | ');
+    if (techEl && newTech && techEl.value !== newTech) { techEl.value = newTech; changed.push('skills'); }
+    if (softEl && newSoft && softEl.value !== newSoft) { softEl.value = newSoft; }
+  }
+
+  // ── Education — patch by index, GPA handled cleanly ──
+  if (aiData.education && Array.isArray(aiData.education) && aiData.education.length > 0) {
+    const eduCards = Array.from(document.querySelectorAll('#edu-list .eb'));
+
+    if (eduCards.length === 0) {
+      // No cards exist yet — add them all
+      aiData.education.forEach(edu => {
+        const gpaNum = edu.gpa ? String(edu.gpa).replace(/^GPA[:\s]*/i, '').trim() : '';
+        let gpaStr = gpaNum ? `GPA: ${gpaNum}` : '';
+        if (edu.coursework) gpaStr += (gpaStr ? ' · ' : '') + `Coursework: ${edu.coursework}`;
+        addEdu({ school: edu.school || '', degree: edu.degree || '', year: edu.year || '', gpa: gpaStr });
+      });
+      changed.push('education');
+    } else {
+      // Cards exist — patch each card that matches by index or school name
+      aiData.education.forEach((aiEdu, idx) => {
+        // Find matching card: first try exact index, then try school name match
+        let card = eduCards[idx] || null;
+        if (!card && aiEdu.school) {
+          card = eduCards.find(c => {
+            const schoolInCard = c.querySelector('input[name="edu_school[]"]')?.value || '';
+            return schoolInCard.toLowerCase().includes(aiEdu.school.toLowerCase().slice(0, 5)) ||
+                   aiEdu.school.toLowerCase().includes(schoolInCard.toLowerCase().slice(0, 5));
+          }) || null;
+        }
+
+        if (card) {
+          let eduFieldChanged = false;
+          const schoolEl = card.querySelector('input[name="edu_school[]"]');
+          const degreeEl = card.querySelector('input[name="edu_degree[]"]');
+          const yearEl   = card.querySelector('input[name="edu_year[]"]');
+          const gpaEl    = card.querySelector('input[name="edu_gpa[]"]');
+
+          if (aiEdu.school && schoolEl && schoolEl.value !== aiEdu.school) {
+            schoolEl.value = aiEdu.school; eduFieldChanged = true;
+          }
+          if (aiEdu.degree && degreeEl && degreeEl.value !== aiEdu.degree) {
+            degreeEl.value = aiEdu.degree; eduFieldChanged = true;
+          }
+          if (aiEdu.year && yearEl && yearEl.value !== aiEdu.year) {
+            yearEl.value = aiEdu.year; eduFieldChanged = true;
+          }
+
+          // ── GPA: always update if AI returned one ──
+          if (aiEdu.gpa !== undefined && aiEdu.gpa !== null && gpaEl) {
+            const rawGpaNum = String(aiEdu.gpa).replace(/^GPA[:\s]*/i, '').trim();
+            if (rawGpaNum) {
+              // Preserve existing coursework text from the field
+              const currentFieldVal = gpaEl.value;
+              const courseworkMatch = currentFieldVal.match(/·\s*Coursework[:\s]+(.+)$/i);
+              const courseworkText  = aiEdu.coursework
+                ? ` · Coursework: ${aiEdu.coursework}`
+                : (courseworkMatch ? ` · Coursework: ${courseworkMatch[1].trim()}` : '');
+
+              const targetVal = `GPA: ${rawGpaNum}${courseworkText}`;
+              if (gpaEl.value !== targetVal) {
+                gpaEl.value = targetVal;
+                eduFieldChanged = true;
+              }
+            }
+          }
+
+          if (eduFieldChanged && !changed.includes('education')) changed.push('education');
+        }
+      });
+    }
+  }
+
+  // ── Experience — replace only if meaningfully different ──
+  if (aiData.experience && Array.isArray(aiData.experience) && aiData.experience.length > 0) {
+    const expCards = Array.from(document.querySelectorAll('#exp-list .eb'));
+    let expChanged = false;
+
+    aiData.experience.forEach((aiExp, idx) => {
+      const card = expCards[idx];
+      if (!card) {
+        // New entry — add it
+        const bullStr = Array.isArray(aiExp.bullets)
+          ? aiExp.bullets.map(b => '• ' + b.replace(/^[•\-*]\s*/, '')).join('\n')
+          : (aiExp.bullets || '');
+        addExp({ title: aiExp.title||'', company: aiExp.company||'', dates: aiExp.dates||'', description: aiExp.description||'', bullets: bullStr });
+        expChanged = true;
+        return;
+      }
+
+      const titleEl  = card.querySelector('input[name="exp_title[]"]');
+      const compEl   = card.querySelector('input[name="exp_company[]"]');
+      const datesEl  = card.querySelector('input[name="exp_dates[]"]');
+      const descEl   = card.querySelector('textarea[name="exp_desc[]"]');
+      const bullsEl  = card.querySelector('textarea[name="exp_bullets[]"]');
+
+      if (aiExp.title  && titleEl && titleEl.value !== aiExp.title)   { titleEl.value  = aiExp.title;  expChanged = true; }
+      if (aiExp.company && compEl && compEl.value !== aiExp.company)  { compEl.value   = aiExp.company; expChanged = true; }
+      if (aiExp.dates  && datesEl && datesEl.value !== aiExp.dates)   { datesEl.value  = aiExp.dates;  expChanged = true; }
+      if (aiExp.description && descEl && descEl.value !== aiExp.description) { descEl.value = aiExp.description; expChanged = true; }
+
+      if (aiExp.bullets && bullsEl) {
+        const bullStr = Array.isArray(aiExp.bullets)
+          ? aiExp.bullets.map(b => '• ' + b.replace(/^[•\-*]\s*/, '')).join('\n')
+          : String(aiExp.bullets);
+        if (bullsEl.value !== bullStr) { bullsEl.value = bullStr; expChanged = true; }
+      }
+    });
+
+    if (expChanged) changed.push('experience');
+  }
+
+  // ── Projects ──
+  if (aiData.projects && Array.isArray(aiData.projects) && aiData.projects.length > 0) {
+    const projCards = Array.from(document.querySelectorAll('#proj-list .eb'));
+    let projChanged = false;
+    aiData.projects.forEach((aiProj, idx) => {
+      const card = projCards[idx];
+      if (!card) {
+        const bullStr = Array.isArray(aiProj.bullets) ? aiProj.bullets.map(b => '• ' + b.replace(/^[•\-*]\s*/, '')).join('\n') : (aiProj.bullets || '');
+        addProj({ name: aiProj.name||'', tech: aiProj.tech||'', bullets: bullStr });
+        projChanged = true;
+        return;
+      }
+      const nameEl = card.querySelector('input[name="proj_name[]"]');
+      const techEl = card.querySelector('input[name="proj_tech[]"]');
+      const bullEl = card.querySelector('textarea[name="proj_bullets[]"]');
+      if (aiProj.name && nameEl && nameEl.value !== aiProj.name) { nameEl.value = aiProj.name; projChanged = true; }
+      if (aiProj.tech && techEl && techEl.value !== aiProj.tech) { techEl.value = aiProj.tech; projChanged = true; }
+      if (aiProj.bullets && bullEl) {
+        const b = Array.isArray(aiProj.bullets) ? aiProj.bullets.map(b => '• ' + b.replace(/^[•\-*]\s*/, '')).join('\n') : String(aiProj.bullets);
+        if (bullEl.value !== b) { bullEl.value = b; projChanged = true; }
+      }
+    });
+    if (projChanged) changed.push('projects');
+  }
+
+  lastResumeData = { ...(lastResumeData || {}), ...aiData };
+
+  // Always sync preview after merge
+  syncPreview();
+  return changed;
+}
+
+
+function showResumeUpdatedBadge(changedSections) {
+  const existing = document.getElementById('resume-updated-badge');
+  if (existing) existing.remove();
+
+  const badge = document.createElement('div');
+  badge.id = 'resume-updated-badge';
+  badge.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#059669,#0d9488);color:#fff;padding:10px 20px;border-radius:50px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;z-index:9999;box-shadow:0 4px 20px rgba(5,150,105,.35);animation:badgeIn .3s cubic-bezier(.34,1.56,.64,1) forwards;';
+  const sections = changedSections.length ? changedSections.join(', ') : 'resume';
+  badge.innerHTML = `<span style="font-size:16px">✅</span> Resume updated · <span style="opacity:.85;font-weight:400">${sections}</span>`;
+
+  // Add keyframe animation
+  if (!document.getElementById('badge-anim-style')) {
+    const style = document.createElement('style');
+    style.id = 'badge-anim-style';
+    style.textContent = '@keyframes badgeIn{from{opacity:0;transform:translateX(-50%) translateY(10px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}';
+    document.head.appendChild(style);
+  }
+
+  document.body.appendChild(badge);
+  setTimeout(() => {
+    badge.style.transition = 'opacity .4s';
+    badge.style.opacity = '0';
+    setTimeout(() => badge.remove(), 450);
+  }, 3000);
+}
+
+/* ── Auto-Fill Engine (full replace, used for first-time population) ── */
+function populateForm(data) {
+  if (!data) return;
+  lastResumeData = data;
+
+  if (data.title) document.getElementById('f-title').value = data.title;
+  if (data.job_target) document.getElementById('f-job-target').value = data.job_target;
+  if (data.first_name) document.getElementById('f-first').value = data.first_name;
+  if (data.last_name) document.getElementById('f-last').value = data.last_name;
+  if (data.email) document.getElementById('f-email').value = data.email;
+  if (data.phone) document.getElementById('f-phone').value = data.phone;
+  if (data.location) document.getElementById('f-location').value = data.location;
+  if (data.linkedin) document.getElementById('f-linkedin').value = data.linkedin;
+  if (data.summary) document.getElementById('f-summary').value = data.summary;
+
+  if (data.skills) {
+    if (typeof data.skills === 'object' && !Array.isArray(data.skills)) {
+      let techParts = [];
+      let softParts = [];
+      for (const [cat, items] of Object.entries(data.skills)) {
+        const itemStr = Array.isArray(items) ? items.join(', ') : items;
+        if (cat.toLowerCase().includes('soft') || cat.toLowerCase().includes('competenc') || cat.toLowerCase().includes('lead')) {
+          softParts.push(`${cat}: ${itemStr}`);
+        } else {
+          techParts.push(`${cat}: ${itemStr}`);
+        }
+      }
+      document.getElementById('f-skills').value = techParts.join(' | ') || Object.values(data.skills).flat().join(', ');
+      document.getElementById('f-skills-soft').value = softParts.join(' | ');
+    } else {
+      const skStr = Array.isArray(data.skills) ? data.skills.join(', ') : data.skills;
+      document.getElementById('f-skills').value = skStr;
+    }
+  }
+
+  // Education
+  if (data.education && Array.isArray(data.education) && data.education.length > 0) {
+    document.getElementById('edu-list').innerHTML = '';
+    data.education.forEach(edu => {
+      // Normalize GPA to consistent "GPA: X.X" format
+      let rawGpa = edu.gpa || '';
+      let gpaStr = '';
+      if (rawGpa) {
+        const gpaNum = String(rawGpa).replace(/^GPA[:\s]*/i, '').trim();
+        gpaStr = gpaNum ? `GPA: ${gpaNum}` : '';
+      }
+      if (edu.coursework) gpaStr = (gpaStr ? `${gpaStr} · ` : '') + `Coursework: ${edu.coursework}`;
+      addEdu({
+        school: edu.school || '',
+        degree: edu.degree || edu.major || '',
+        year: edu.year || edu.dates || '',
+        gpa: gpaStr
+      });
+    });
+  }
+
+  // Experience
+  if (data.experience && Array.isArray(data.experience) && data.experience.length > 0) {
+    document.getElementById('exp-list').innerHTML = '';
+    data.experience.forEach(exp => {
+      const bulletsStr = Array.isArray(exp.bullets) ? exp.bullets.map(b => '• ' + b.replace(/^[•\-*]\s*/, '')).join('\n') : (exp.bullets || '');
+      addExp({
+        title: exp.title || '',
+        company: exp.company || '',
+        dates: exp.dates || '',
+        description: exp.description || '',
+        bullets: bulletsStr
+      });
+    });
+  }
+
+  // Projects
+  if (data.projects && Array.isArray(data.projects) && data.projects.length > 0) {
+    document.getElementById('proj-list').innerHTML = '';
+    data.projects.forEach(proj => {
+      const bulletsStr = Array.isArray(proj.bullets) ? proj.bullets.map(b => '• ' + b.replace(/^[•\-*]\s*/, '')).join('\n') : (proj.bullets || '');
+      addProj({
+        name: proj.name || '',
+        tech: proj.tech || proj.dates || '',
+        bullets: bulletsStr
+      });
+    });
+  }
+
+  syncPreview();
+}
+
+function autoFillFromAiText(rawText) {
+  if (!rawText) return;
+  const data = {};
+
+  const emailM = rawText.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/i);
+  if (emailM) data.email = emailM[1];
+
+  const phoneM = rawText.match(/(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
+  if (phoneM) data.phone = phoneM[0];
+
+  const nameM = rawText.match(/(?:Name:|\*\*Name:\*\*)\s*([A-Za-z\s]+)/i) || rawText.match(/^\s*([A-Z][a-z]+)\s+([A-Z][a-z]+)/m);
+  if (nameM) {
+    const parts = (nameM[1] + (nameM[2] ? ' ' + nameM[2] : '')).trim().split(' ');
+    data.first_name = parts[0];
+    if (parts.length > 1) data.last_name = parts.slice(1).join(' ');
+  }
+
+  const skillsM = rawText.match(/(?:Skills|Technical Skills|Key Skills)[:\-]?\s*([^\n]+)/i);
+  if (skillsM) data.skills = skillsM[1].trim();
+
+  const summaryM = rawText.match(/(?:Summary|Professional Summary|Objective)[:\-]?\s*([^\n]+(?:\n[^\n]+)?)/i);
+  if (summaryM) data.summary = summaryM[1].trim();
+
+  populateForm(data);
+}
+
+function triggerAutoFill(btn) {
+  const bubble = btn.closest('.chat-ai');
+  if (bubble && bubble._resumeData) {
+    populateForm(bubble._resumeData);
+    openPreview();
+    showToast('✨ Form auto-filled with your details and synced to LaTeX preview!');
+  } else if (lastResumeData) {
+    populateForm(lastResumeData);
+    openPreview();
+    showToast('✨ Form auto-filled with your details and synced to LaTeX preview!');
+  } else {
+    const text = bubble ? bubble.querySelector('.ai-text-content')?.innerText : '';
+    autoFillFromAiText(text);
+    openPreview();
+  }
+}
+
+function promptAiAutoFill() {
+  generateFullAiResume();
+}
+
+/* ── AI Chat ── */
+const chatEl = document.getElementById('chat-messages');
+let activeProvider = 'auto';
+let chatHistory = [];
+
+function setProvider(prov) {
+  activeProvider = prov;
+  ['auto', 'groq', 'gemini'].forEach(p => {
+    const tab = document.getElementById('tab-' + p);
+    if (!tab) return;
+    if (p === prov) {
+      tab.className = 'flex-1 py-1 rounded-md text-center transition-all bg-white text-[#1F1E1D] shadow-xs font-semibold';
+    } else {
+      tab.className = 'flex-1 py-1 rounded-md text-center transition-all text-[#666461] hover:text-[#1F1E1D]';
+    }
+  });
+
+  const indicator = document.getElementById('active-model-indicator');
+  if (indicator) {
+    if (prov === 'groq') {
+      indicator.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span> Groq Active (Lightning Fast)';
+      indicator.className = 'flex items-center gap-1 font-medium text-orange-600';
+    } else if (prov === 'gemini') {
+      indicator.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Gemini Active (Google 3.6 Flash)';
+      indicator.className = 'flex items-center gap-1 font-medium text-blue-600';
+    } else {
+      indicator.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Auto: Groq + Gemini Ready';
+      indicator.className = 'flex items-center gap-1 font-medium text-[#7c3aed]';
+    }
+  }
+}
+
+function sendQuickPrompt(promptText) {
+  const input = document.getElementById('chat-input');
+  input.value = promptText;
+  sendChat();
+}
+
+function getContext() {
+  // Collect FULL resume state so AI can do targeted partial edits
+  const experiences = [];
+  document.querySelectorAll('#exp-list .eb').forEach(b => {
+    const t = b.querySelector('input[name="exp_title[]"]')?.value.trim() || '';
+    const c = b.querySelector('input[name="exp_company[]"]')?.value.trim() || '';
+    const d = b.querySelector('input[name="exp_dates[]"]')?.value.trim() || '';
+    const desc = b.querySelector('textarea[name="exp_desc[]"]')?.value.trim() || '';
+    const bl = b.querySelector('textarea[name="exp_bullets[]"]')?.value.trim() || '';
+    if (t || c) experiences.push({ title: t, company: c, dates: d, description: desc, bullets: bl ? bl.split('\n').filter(s => s.trim()).map(s => s.replace(/^[•\-*]\s*/, '').trim()) : [] });
+  });
+
+  const education = [];
+  document.querySelectorAll('#edu-list .eb').forEach(b => {
+    const s = b.querySelector('input[name="edu_school[]"]')?.value.trim() || '';
+    const deg = b.querySelector('input[name="edu_degree[]"]')?.value.trim() || '';
+    const y = b.querySelector('input[name="edu_year[]"]')?.value.trim() || '';
+    const g = b.querySelector('input[name="edu_gpa[]"]')?.value.trim() || '';
+    if (s || deg) education.push({ school: s, degree: deg, year: y, gpa: g });
+  });
+
+  const projects = [];
+  document.querySelectorAll('#proj-list .eb').forEach(b => {
+    const n = b.querySelector('input[name="proj_name[]"]')?.value.trim() || '';
+    const t = b.querySelector('input[name="proj_tech[]"]')?.value.trim() || '';
+    const bl = b.querySelector('textarea[name="proj_bullets[]"]')?.value.trim() || '';
+    if (n || t) projects.push({ name: n, tech: t, bullets: bl ? bl.split('\n').filter(s => s.trim()).map(s => s.replace(/^[•\-*]\s*/, '').trim()) : [] });
+  });
+
+  const skillsTech = $v('f-skills');
+  const skillsSoft = $v('f-skills-soft');
+  const skillsObj = {};
+  if (skillsTech) skillsObj['Technical Skills'] = skillsTech.split(/[,|]/).map(s => s.replace(/^[^:]+:/,'').trim()).filter(Boolean);
+  if (skillsSoft) skillsObj['Core Competencies'] = skillsSoft.split(/[,|]/).map(s => s.replace(/^[^:]+:/,'').trim()).filter(Boolean);
+
+  return {
+    title: $v('f-title'),
+    job_target: $v('f-job-target'),
+    job_description: $v('f-job-description'),
+    first_name: $v('f-first'),
+    last_name: $v('f-last'),
+    email: $v('f-email'),
+    phone: $v('f-phone'),
+    location: $v('f-location'),
+    linkedin: $v('f-linkedin'),
+    summary: $v('f-summary'),
+    skills: skillsObj,
+    experience: experiences,
+    education: education,
+    projects: projects,
+  };
+}
+
+function formatMarkdown(text) {
+  if (!text) return '';
+
+  // ── CRITICAL: Strip ALL json_resume / json code blocks completely from display ──
+  // These are structured data blocks for the form, NOT meant to be shown in chat
+  text = text.replace(/```json_resume[\s\S]*?```/gi, '').trim();
+  text = text.replace(/```json[\s\S]*?```/gi, '').trim();
+
+  // Strip any remaining fenced code blocks — show content without fences
+  text = text.replace(/```(?:\w+)?\n?([\s\S]*?)```/g, (_, code) => {
+    return '\n' + code.trim() + '\n';
+  });
+
+  // Escape HTML
+  let html = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Bold: **text**
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  // Italic: *text* (not inside words)
+  html = html.replace(/(?<![\w])\*([^*\n]+)\*(?![\w])/g, '<em>$1</em>');
+  // Inline code: `code`
+  html = html.replace(/`([^`]+)`/g, '<code class="bg-[#F0EDE8] px-1 py-0.5 rounded text-[11.5px] font-mono text-[#7c3aed]">$1</code>');
+
+  // Headings: ### or ## or #
+  html = html.replace(/^###\s+(.+)$/gm, '<div class="font-semibold text-[#1F1E1D] mt-2 mb-0.5 text-[13px]">$1</div>');
+  html = html.replace(/^##\s+(.+)$/gm, '<div class="font-bold text-[#1F1E1D] mt-2.5 mb-1 text-[13.5px]">$1</div>');
+  html = html.replace(/^#\s+(.+)$/gm, '<div class="font-bold text-[#1F1E1D] mt-3 mb-1 text-[14px]">$1</div>');
+
+  // Unordered bullets: - item or • item or * item
+  html = html.replace(/^[ \t]*[•\-\*][ \t]+(.+)$/gm, '<li class="ml-4 list-disc leading-snug">$1</li>');
+  // Numbered list: 1. item
+  html = html.replace(/^[ \t]*(\d+)\.[ \t]+(.+)$/gm, '<li class="ml-4 list-decimal leading-snug">$2</li>');
+  // Wrap consecutive <li> in <ul>
+  html = html.replace(/((?:<li[^>]*>.*?<\/li>\n?)+)/g, '<ul class="my-1 space-y-0.5">$1</ul>');
+
+  // Double newline → paragraph break
+  html = html.replace(/\n{2,}/g, '</p><p class="mt-1.5">');
+  // Single newline → line break
+  html = html.replace(/\n/g, '<br>');
+
+  // Wrap in paragraph
+  html = '<p class="m-0">' + html + '</p>';
+  return html;
+}
+
+function copyReplyText(btn) {
+  const bubble = btn.closest('.chat-ai');
+  const textEl = bubble ? bubble.querySelector('.ai-text-content') : null;
+  const text = textEl ? textEl.innerText : '';
+  if (!text) return;
+
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<span class="material-symbols-outlined text-[12px] text-emerald-600">check</span> Copied!';
+    setTimeout(() => { btn.innerHTML = orig; }, 2000);
+  });
+}
+
+function applyToSummary(btn) {
+  const bubble = btn.closest('.chat-ai');
+  const textEl = bubble ? bubble.querySelector('.ai-text-content') : null;
+  if (!textEl) return;
+  const text = textEl.innerText.trim();
+  const summaryInput = document.getElementById('f-summary');
+  if (summaryInput) {
+    summaryInput.value = text;
+    syncPreview();
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<span class="material-symbols-outlined text-[12px] text-emerald-600">check</span> Applied!';
+    setTimeout(() => { btn.innerHTML = orig; }, 2000);
+  }
+}
+
+function appendMsg(text, role, meta = {}) {
+  const div = document.createElement('div');
+
+  if (role === 'user') {
+    div.className = 'chat-bubble chat-user msg-anim';
+    div.textContent = text;
+    chatEl.appendChild(div);
+    chatEl.scrollTop = chatEl.scrollHeight;
+    return div;
+  }
+
+  // AI bubble
+  div.className = 'chat-bubble chat-ai msg-anim';
+  if (meta.resumeData) div._resumeData = meta.resumeData;
+
+  const provName = meta.provider || (activeProvider === 'gemini' ? 'Gemini' : 'AI Coach');
+  const badgeClass = provName.includes('Groq') ? 'chat-badge-groq' : (provName.includes('Gemini') ? 'chat-badge-gemini' : 'chat-badge-auto');
+  const icon = provName.includes('Groq') ? '⚡' : (provName.includes('Gemini') ? '✦' : '✨');
+
+  div.innerHTML = `
+    <div class="flex items-center justify-between text-[10.5px] text-[#8F8C86] mb-1.5 pb-1 border-b border-[#F0EDE8]">
+      <span class="chat-badge ${badgeClass}">${icon} ${provName}</span>
+      <div class="flex items-center gap-1.5">
+        <button type="button" onclick="triggerAutoFill(this)" class="hover:text-[#7c3aed] text-[10.5px] font-semibold text-[#7c3aed] transition-colors flex items-center gap-0.5 bg-[#F5F3FF] px-2 py-0.5 rounded-md border border-[#DDD6FE]" title="Auto-fill form fields with these details">
+          <span class="material-symbols-outlined text-[12px]">auto_fix_high</span> Auto-Fill Form
+        </button>
+        <button type="button" onclick="applyToSummary(this)" class="hover:text-[#7c3aed] text-[10.5px] font-medium transition-colors flex items-center gap-0.5 px-1 py-0.5" title="Insert into Summary field">
+          <span class="material-symbols-outlined text-[12px]">input</span> Summary
+        </button>
+        <button type="button" onclick="copyReplyText(this)" class="hover:text-[#1F1E1D] text-[10.5px] font-medium transition-colors flex items-center gap-0.5 px-1 py-0.5" title="Copy text">
+          <span class="material-symbols-outlined text-[12px]">content_copy</span> Copy
+        </button>
+      </div>
+    </div>
+    <div class="ai-text-content leading-relaxed text-[12.5px] text-[#2A2826]"></div>
+  `;
+
+  chatEl.appendChild(div);
+  chatEl.scrollTop = chatEl.scrollHeight;
+
+  // Typewriter stream: render word-by-word into the content div
+  const contentEl = div.querySelector('.ai-text-content');
+  streamText(text, contentEl, chatEl);
+
+  return div;
+}
+
+// Typewriter effect: splits raw text into words and renders rendered HTML progressively
+function streamText(fullText, targetEl, scrollContainer, onDone) {
+  const words = fullText.split(/(\s+)/);
+  let index = 0;
+  let accumulated = '';
+
+  // Speed: ms per word — smaller = faster
+  const WORD_DELAY = 18;
+
+  function nextWord() {
+    if (index >= words.length) {
+      // Final render — ensure HTML is clean
+      targetEl.innerHTML = formatMarkdown(accumulated);
+      if (onDone) onDone();
+      return;
+    }
+    accumulated += words[index];
+    index++;
+    // Render current accumulated text as formatted markdown
+    targetEl.innerHTML = formatMarkdown(accumulated);
+    if (scrollContainer) scrollContainer.scrollTop = scrollContainer.scrollHeight;
+    setTimeout(nextWord, WORD_DELAY);
+  }
+
+  nextWord();
+}
+
+function showThinking() {
+  const div = document.createElement('div');
+  div.className = 'chat-thinking msg-anim';
+  div.id = 'thinking-bubble';
+  div.innerHTML = '<span></span><span></span><span></span>';
+  chatEl.appendChild(div);
+  chatEl.scrollTop = chatEl.scrollHeight;
+}
+function removeThinking() { document.getElementById('thinking-bubble')?.remove(); }
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  // Remove quick prompts after first interaction
+  document.getElementById('quick-prompts')?.remove();
+
+  input.value = '';
+  appendMsg(msg, 'user');
+  chatHistory.push({ role: 'user', content: msg });
+
+  const btn = document.getElementById('send-btn');
+  btn.disabled = true;
+
+  // ── Only bypass API for PURE greetings/thanks with NO action intent ──
+  // If the message contains ANY resume action keyword, ALWAYS send to AI
+  const RESUME_ACTION_RE = /\b(change|update|edit|add|remove|delete|fix|improve|make|rewrite|write|generate|create|build|adjust|set|replace|rename|modify|boost|strengthen|tailor|optimize|enhance|increase|decrease|raise|lower|upgrade|switch|move|insert|include|exclude|put|give|get|use|try|do|help|can you|please|want|need|should|would|could|gpa|summary|bullet|skill|experience|education|job|title|name|email|phone|location|linkedin|company|degree|school|project|year|date|role|position|work|section|resume|cv)\b/i;
+
+  const GREETING_RE = /^(hi+|hey+|hello+|howdy|sup|yo|good\s*(morning|afternoon|evening|day)|what'?s up|hiya|greetings|hola|bonjour|how are you|how'?s it going|what can you do|who are you|what do you do)[!?.,\s]*$/i;
+  const THANKS_RE   = /^(thanks?|thank you|thx|ty)[!?.,\s]*$/i;
+
+  // Only intercept if it's a pure greeting/thanks AND has zero action intent
+  const hasActionIntent = RESUME_ACTION_RE.test(msg);
+
+  if (!hasActionIntent && GREETING_RE.test(msg)) {
+    showThinking();
+    await new Promise(r => setTimeout(r, 500));
+    removeThinking();
+    const replies = [
+      "Hey there! \uD83D\uDC4B I'm your AI resume coach. Tell me what you'd like to change \u2014 I'll update the resume live!",
+      "Hello! Ready to help. Say things like \"Change my summary\", \"Add Python to skills\", or \"Rewrite my bullets\" \u2014 I'll do it instantly.",
+      "Hi! I can edit any part of your resume. Just tell me what you want to change!",
+    ];
+    appendMsg(replies[Math.floor(Math.random() * replies.length)], 'ai', { provider: 'AI Coach' });
+    chatHistory.push({ role: 'assistant', content: 'Greeting response' });
+    btn.disabled = false;
+    return;
+  }
+
+  if (!hasActionIntent && THANKS_RE.test(msg)) {
+    showThinking();
+    await new Promise(r => setTimeout(r, 400));
+    removeThinking();
+    appendMsg("You're welcome! \uD83D\uDE0A Let me know if there's anything else you'd like to change in your resume.", 'ai', { provider: 'AI Coach' });
+    chatHistory.push({ role: 'assistant', content: 'Thanks response' });
+    btn.disabled = false;
+    return;
+  }
+
+  showThinking();
+
+  try {
+    const res = await fetch('/resume/ai-chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        message: msg,
+        context: getContext(),
+        provider: activeProvider,
+        history: chatHistory,
+      }),
+    });
+    const data = await res.json();
+    removeThinking();
+
+    if (data.reply) {
+      appendMsg(data.reply, 'ai', {
+        provider: data.provider || 'AI',
+        model: data.model,
+        resumeData: data.resume_data
+      });
+      chatHistory.push({ role: 'assistant', content: data.reply });
+
+      // If AI produced structured resume data, smart-merge it (partial edits preserved)
+      if (data.resume_data) {
+        const changed = smartMerge(data.resume_data);
+        // Always open preview so user can see the update immediately
+        showResumeUpdatedBadge(changed.length > 0 ? changed : ['resume']);
+        openPreview();
+      }
+    } else {
+      appendMsg(data.error || 'Sorry, no response received from AI.', 'ai', { provider: 'Error' });
+    }
+  } catch (err) {
+    removeThinking();
+    appendMsg('Network error — please check if the server is running and try again.', 'ai', { provider: 'Error' });
+  } finally {
+    btn.disabled = false;
+    input.focus();
+  }
+}
+
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+}
+
+/* ── Form submit ── */
+document.getElementById('resumeForm')?.addEventListener('submit', function(e) {
+  e.preventDefault();
+  generateFullAiResume();
+});
+
+/* ── Init entries ── */
+if (INITIAL_RESUME_DATA) {
+  populateForm(INITIAL_RESUME_DATA);
+}
+// No auto-fill on new resume — user fills in their own info
+
+/* ── Download as PDF (matches preview format and proportions exactly) ── */
+function downloadAsPDF() {
+  const sheet = document.getElementById('resume-sheet');
+  if (!sheet) { alert('Please generate a resume first, then download.'); return; }
+
+  const candidateName = (document.getElementById('rv-name')?.textContent || 'Resume').trim();
+  const resumeHTML = sheet.innerHTML;
+
+  const printDoc = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title></title>
+<style>
+  @page {
+    size: letter portrait;
+    margin: 0 !important;
+  }
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  html, body {
+    font-family: 'Times New Roman', Times, Georgia, serif;
+    font-size: 10.8pt;
+    line-height: 1.52;
+    color: #111;
+    background: #fff;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .resume-container {
+    width: 100%;
+    margin: 0 auto;
+    padding: 0.5in 0.65in !important;
+    box-sizing: border-box;
+  }
+  /* Header */
+  .rv-name {
+    font-size: 25pt !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.04em !important;
+    font-family: Georgia, 'Times New Roman', serif !important;
+    text-transform: uppercase !important;
+    color: #111 !important;
+    margin-bottom: 4pt !important;
+    line-height: 1.15 !important;
+    text-align: center !important;
+  }
+  .rv-target-role {
+    font-size: 13pt !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.02em !important;
+    font-family: Georgia, 'Times New Roman', serif !important;
+    color: #222 !important;
+    margin-bottom: 4pt !important;
+    text-align: center !important;
+  }
+  .rv-contact {
+    font-size: 10.2pt !important;
+    color: #333 !important;
+    letter-spacing: 0.02em !important;
+    font-family: 'Times New Roman', serif !important;
+    text-align: center !important;
+    margin-bottom: 14pt !important;
+  }
+  /* Section title */
+  .rv-sec-title {
+    font-size: 12pt !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.06em !important;
+    border-bottom: 1.2pt solid #111 !important;
+    padding-bottom: 2pt !important;
+    margin-top: 17pt !important;
+    margin-bottom: 8pt !important;
+    font-family: 'Times New Roman', serif !important;
+    color: #111 !important;
+    break-after: avoid;
+  }
+  /* Summary */
+  #rv-summary, .rv-summary {
+    font-size: 10.8pt !important;
+    line-height: 1.58 !important;
+    color: #222 !important;
+    text-align: justify !important;
+    margin-bottom: 6pt !important;
+    font-family: 'Times New Roman', serif !important;
+  }
+  /* Entry rows */
+  .rv-entry {
+    margin-bottom: 12pt !important;
+    break-inside: avoid;
+  }
+  .rv-company {
+    font-weight: 700 !important;
+    font-size: 11.2pt !important;
+    color: #111 !important;
+    text-transform: uppercase !important;
+    font-family: 'Times New Roman', serif !important;
+  }
+  .rv-loc {
+    font-weight: 700 !important;
+    font-size: 10.2pt !important;
+    color: #111 !important;
+    font-family: 'Times New Roman', serif !important;
+  }
+  .rv-title {
+    font-weight: 700 !important;
+    font-size: 10.8pt !important;
+    color: #222 !important;
+    font-family: 'Times New Roman', serif !important;
+  }
+  .rv-dates {
+    font-weight: 600 !important;
+    font-size: 10.2pt !important;
+    color: #333 !important;
+    font-family: 'Times New Roman', serif !important;
+  }
+  .rv-entry-title {
+    font-weight: 700 !important;
+    font-size: 10.8pt !important;
+    color: #111 !important;
+    font-family: 'Times New Roman', serif !important;
+  }
+  .rv-entry-sub {
+    font-size: 10.2pt !important;
+    color: #333 !important;
+    font-family: 'Times New Roman', serif !important;
+  }
+  /* Bullets */
+  .rv-bullet, ul {
+    list-style: disc !important;
+    margin-left: 20pt !important;
+    padding-left: 0 !important;
+    margin-top: 4pt !important;
+  }
+  .rv-bullet li, ul li {
+    font-size: 10.5pt !important;
+    color: #222 !important;
+    line-height: 1.54 !important;
+    margin-bottom: 5.5pt !important;
+    text-align: justify !important;
+    font-family: 'Times New Roman', serif !important;
+  }
+  /* Education */
+  .rv-edu-entry {
+    margin-bottom: 10pt !important;
+    break-inside: avoid;
+  }
+  .rv-school {
+    font-weight: 700 !important;
+    font-size: 11.2pt !important;
+    color: #111 !important;
+    text-transform: uppercase !important;
+    font-family: 'Times New Roman', serif !important;
+  }
+  .rv-year {
+    font-weight: 700 !important;
+    font-size: 10.2pt !important;
+    color: #111 !important;
+    font-family: 'Times New Roman', serif !important;
+  }
+  .rv-degree {
+    font-style: italic !important;
+    font-size: 10.8pt !important;
+    color: #222 !important;
+    font-family: 'Times New Roman', serif !important;
+  }
+  .rv-gpa {
+    font-style: normal !important;
+    font-weight: 600 !important;
+    font-size: 10.2pt !important;
+    color: #444 !important;
+    font-family: 'Times New Roman', serif !important;
+  }
+  /* Skills */
+  #rv-skills, .rv-skills-list {
+    font-size: 10.5pt !important;
+    line-height: 1.54 !important;
+    font-family: 'Times New Roman', serif !important;
+  }
+  #rv-skills ul li, .rv-skills-list li {
+    font-size: 10.5pt !important;
+    line-height: 1.54 !important;
+    margin-bottom: 5.5pt !important;
+  }
+  /* Flex containers */
+  div[style*="display:flex"], div[style*="display: flex"] {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: baseline !important;
+  }
+  /* Contenteditable cleanup */
+  [contenteditable] {
+    outline: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    cursor: default !important;
+  }
+</style>
+</head>
+<body>
+  <div class="resume-container">${resumeHTML}</div>
+</body>
+</html>`;
+
+  const printWin = window.open('', '_blank', 'width=850,height=1100');
+  if (!printWin) {
+    alert('Please allow pop-ups to download the PDF, then try again.');
+    return;
+  }
+  printWin.document.write(printDoc);
+  printWin.document.close();
+
+  printWin.onload = function() {
+    if (printWin.document.fonts && printWin.document.fonts.ready) {
+      printWin.document.fonts.ready.then(() => {
+        setTimeout(() => {
+          printWin.focus();
+          printWin.print();
+          setTimeout(() => printWin.close(), 1500);
+        }, 150);
+      });
+    } else {
+      setTimeout(() => {
+        printWin.focus();
+        printWin.print();
+        setTimeout(() => printWin.close(), 1500);
+      }, 400);
+    }
+  };
+}
+
+</script>
+
+</body>
+</html>

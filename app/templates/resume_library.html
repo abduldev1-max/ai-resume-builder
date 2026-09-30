@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Resumes — ResumeAI</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','system-ui','sans-serif'],serif:['Newsreader','Georgia','serif']}}}};</script>
+<style>
+@layer base{html,body{height:100%;margin:0;padding:0;background:#FAF9F6;color:#1F1E1D;}}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-thumb{background:#D9D5CF;border-radius:9999px;}
+.nav-active{background:#EDE8E1!important;font-weight:500;}
+.qa-btn{transition:background .14s,transform .12s;}
+.qa-btn:hover{transform:translateY(-1px);}
+.resume-card{transition:box-shadow .18s,transform .16s;}
+.resume-card:hover{box-shadow:0 6px 24px rgba(0,0,0,.07);transform:translateY(-2px);}
+@keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+.card-anim{animation:fadein .3s ease both;}
+</style>
+</head>
+<body class="font-sans antialiased overflow-hidden flex h-screen bg-[#FAF9F6]">
+
+<!-- ══ SIDEBAR ══════════════════════════════════════════ -->
+<aside id="sidebar" class="w-[250px] flex-shrink-0 bg-[#FBF9F7] border-r border-[#E8E5DF] flex flex-col h-full z-30 select-none">
+  <div class="flex flex-col h-full overflow-hidden">
+    <div class="h-14 px-4 flex items-center border-b border-[#EFECE6]">
+      <a href="/resume/dashboard" class="flex items-center gap-2.5">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="ResumeAI Logo" class="w-7 h-7 object-contain">
+        <span class="font-serif text-[1.1rem] font-medium text-[#1F1E1D]">ResumeAI</span>
+      </a>
+    </div>
+    <!-- Nav -->
+    <div class="px-2.5 pt-3 pb-2 flex flex-col gap-0.5 text-[13.5px]">
+      <a href="/resume/dashboard" class="flex items-center gap-3 px-2.5 py-1.5 rounded-lg text-[#1F1E1D] hover:bg-[#F0ECE6] transition-colors">
+        <span class="material-symbols-outlined text-[18px] text-[#666461]">dashboard</span>Dashboard
+      </a>
+      <a href="/resume/library" class="nav-active flex items-center gap-3 px-2.5 py-1.5 rounded-lg text-[#1F1E1D] hover:bg-[#F0ECE6] transition-colors">
+        <span class="material-symbols-outlined text-[18px] text-[#666461]">description</span>Resume
+      </a>
+      <a href="/resume/editor" class="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[#1F1E1D] hover:bg-[#F0ECE6] transition-colors">
+        <div class="flex items-center gap-3"><span class="material-symbols-outlined text-[18px] text-[#666461]">auto_fix_high</span>AI Editor</div>
+        <span class="text-[10.5px] font-semibold px-1.5 py-0.5 rounded-md bg-[#E4EBF7] text-[#2C6ECB]">AI</span>
+      </a>
+      <a href="/resume/ats-optimizer" class="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[#1F1E1D] hover:bg-[#F0ECE6] transition-colors">
+        <div class="flex items-center gap-3"><span class="material-symbols-outlined text-[18px] text-[#666461]">check_circle</span>ATS Optimizer</div>
+        <span class="text-[10.5px] font-semibold px-1.5 py-0.5 rounded-md bg-[#ECE8E1] text-[#666461]">Pro</span>
+      </a>
+    </div>
+    <div class="mx-3 border-t border-[#EFECE6] mt-1"></div>
+    <!-- Quick Actions -->
+    <div class="px-2.5 pt-3 pb-1">
+      <div class="px-2 mb-2 text-[11px] font-semibold uppercase tracking-widest text-[#8F8C86]">Quick Actions</div>
+      <div class="grid grid-cols-2 gap-1.5">
+        <a href="/resume/editor" class="qa-btn flex flex-col items-center gap-1 py-2.5 rounded-xl text-center border border-[#EFECE6] bg-white hover:bg-[#F5F3FF] hover:border-[#c4b5fd]">
+          <span class="material-symbols-outlined text-[19px]" style="color:#7c3aed;font-variation-settings:'FILL' 1">add_circle</span>
+          <span class="text-[10.5px] font-medium text-[#1F1E1D]">New Resume</span>
+        </a>
+        <a href="/resume/editor" class="qa-btn flex flex-col items-center gap-1 py-2.5 rounded-xl text-center border border-[#EFECE6] bg-white hover:bg-[#ECFEFF] hover:border-[#67e8f9]">
+          <span class="material-symbols-outlined text-[19px]" style="color:#06b6d4;font-variation-settings:'FILL' 1">auto_fix_high</span>
+          <span class="text-[10.5px] font-medium text-[#1F1E1D]">AI Editor</span>
+        </a>
+        <a href="/resume/ats-optimizer" class="qa-btn flex flex-col items-center gap-1 py-2.5 rounded-xl text-center border border-[#EFECE6] bg-white hover:bg-[#F0FDF4] hover:border-[#86efac]">
+          <span class="material-symbols-outlined text-[19px]" style="color:#10b981;font-variation-settings:'FILL' 1">check_circle</span>
+          <span class="text-[10.5px] font-medium text-[#1F1E1D]">ATS Check</span>
+        </a>
+      </div>
+    </div>
+    <div class="mx-3 border-t border-[#EFECE6] mt-2"></div>
+    <div class="flex-1"></div>
+    <div class="p-2 border-t border-[#E8E5DF]">
+      <div class="flex items-center justify-between px-1">
+        <button class="flex items-center gap-2 hover:bg-[#F0ECE6] px-1.5 py-1 rounded-lg transition-colors">
+          <span class="w-6 h-6 rounded-full text-white text-[11px] font-semibold flex items-center justify-center" style="background:linear-gradient(135deg,#7c3aed,#06b6d4)">{{ user.first_name[0]|upper if user and user.first_name else 'U' }}</span>
+          <span class="text-[13px] text-[#1F1E1D]">{{ user.first_name if user and user.first_name else 'User' }}</span>
+          <span class="text-[11px] text-[#8F8C86]">· Free</span>
+        </button>
+        <div class="flex items-center gap-1 text-[#8F8C86]">
+          <a href="/auth/logout" class="p-1 hover:text-[#1F1E1D] hover:bg-[#F0ECE6] rounded"><span class="material-symbols-outlined text-[16px]">logout</span></a>
+          <button id="toggle-sidebar-btn" class="p-1 hover:text-[#1F1E1D] hover:bg-[#F0ECE6] rounded"><span class="material-symbols-outlined text-[16px]">dock_to_left</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+
+<!-- ══ MAIN ══════════════════════════════════════════════ -->
+<div class="flex-1 flex flex-col h-full overflow-hidden">
+
+  <!-- Top bar -->
+  <header class="h-14 px-5 border-b border-[#E8E5DF] flex items-center justify-between bg-[#FAF9F6] flex-shrink-0">
+    <div class="flex items-center gap-2">
+      <button id="hamburger-btn" class="p-1.5 rounded-lg text-[#666461] hover:bg-[#F0ECE6] transition-colors">
+        <span class="material-symbols-outlined text-[20px]">menu</span>
+      </button>
+      <h1 class="text-[15px] font-semibold text-[#1F1E1D]">My Resumes</h1>
+      <span class="ml-1 px-2 py-0.5 rounded-full bg-[#EDE8E1] text-[11px] font-semibold text-[#666461]">{{ resumes|length }}</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <!-- Search -->
+      <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-[#E8E5DF] bg-white text-[13px] w-[200px] focus-within:border-[#a78bfa] transition-all">
+        <span class="material-symbols-outlined text-[15px] text-[#8F8C86]">search</span>
+        <input type="text" id="searchInput" placeholder="Search resumes…" class="w-full bg-transparent border-none outline-none text-[13px] text-[#1F1E1D] placeholder-[#B0ACA6]">
+      </div>
+      <!-- Sort -->
+      <select class="px-3 py-1.5 rounded-xl border border-[#E8E5DF] bg-white text-[12.5px] text-[#666461] focus:outline-none">
+        <option>Newest first</option>
+        <option>Oldest first</option>
+        <option>By title</option>
+      </select>
+      <!-- New -->
+      <a href="/resume/editor"
+         class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12.5px] font-semibold text-white hover:opacity-90 active:scale-95 transition-all"
+         style="background:linear-gradient(135deg,#7c3aed,#06b6d4)">
+        <span class="material-symbols-outlined text-[15px]" style="font-variation-settings:'FILL' 1">add</span>
+        New Resume
+      </a>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="flex-1 overflow-y-auto px-6 py-6">
+    {% if resumes %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="resumeGrid">
+      {% for resume in resumes %}
+      <div class="resume-card card-anim bg-white border border-[#E7E3DC] rounded-2xl overflow-hidden"
+           style="animation-delay: {{ loop.index0 * 0.05 }}s"
+           data-title="{{ resume.title|lower }}">
+
+        <!-- Card header (mini resume preview) -->
+        <div class="h-32 relative overflow-hidden flex items-center justify-center"
+             style="background:linear-gradient(135deg,#f5f3ff 0%,#ede9fe 60%,#e0f2fe 100%)">
+          <!-- Mini paper -->
+          <div class="w-[90px] h-[115px] bg-white rounded-lg shadow border border-[#ddd] p-2 flex flex-col gap-1 opacity-90 transform rotate-1">
+            <div class="h-2 w-16 rounded bg-[#7c3aed]/20"></div>
+            <div class="h-1.5 w-10 rounded bg-[#06b6d4]/20"></div>
+            <div class="mt-1 border-t border-[#eee] pt-1 flex flex-col gap-0.5">
+              <div class="h-1 w-14 rounded bg-[#ccc]"></div>
+              <div class="h-1 w-12 rounded bg-[#ddd]"></div>
+              <div class="h-1 w-10 rounded bg-[#ddd]"></div>
+            </div>
+            <div class="mt-1 border-t border-[#eee] pt-1 flex flex-col gap-0.5">
+              <div class="h-1 w-12 rounded bg-[#ccc]"></div>
+              <div class="h-1 w-14 rounded bg-[#ddd]"></div>
+              <div class="h-1 w-8 rounded bg-[#ddd]"></div>
+            </div>
+          </div>
+          <!-- ATS badge -->
+          <div class="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-lg bg-white/80 backdrop-blur text-[11px] font-semibold text-[#10b981] border border-[#d1fae5]">
+            <span class="material-symbols-outlined text-[13px]" style="font-variation-settings:'FILL' 1">check_circle</span>
+            ATS Ready
+          </div>
+        </div>
+
+        <!-- Card body -->
+        <div class="p-4">
+          <div class="flex items-start justify-between mb-1">
+            <h2 class="text-[14px] font-semibold text-[#1F1E1D] leading-tight">{{ resume.title }}</h2>
+            <div class="relative" id="menu-{{ resume.id }}">
+              <button onclick="toggleMenu({{ resume.id }})"
+                      class="p-1 rounded-lg text-[#8F8C86] hover:text-[#1F1E1D] hover:bg-[#F0ECE6] transition-colors">
+                <span class="material-symbols-outlined text-[17px]">more_vert</span>
+              </button>
+              <!-- Dropdown -->
+              <div id="dropdown-{{ resume.id }}"
+                   class="hidden absolute right-0 top-8 z-20 w-40 bg-white border border-[#E8E5DF] rounded-xl shadow-lg py-1 text-[13px]">
+                <a href="/resume/editor/{{ resume.id }}" class="flex items-center gap-2 px-3 py-2 hover:bg-[#F0ECE6] text-[#1F1E1D]">
+                  <span class="material-symbols-outlined text-[15px]">edit</span>Edit in AI Editor
+                </a>
+                <a href="#" class="flex items-center gap-2 px-3 py-2 hover:bg-[#F0ECE6] text-[#1F1E1D]">
+                  <span class="material-symbols-outlined text-[15px]">download</span>Download PDF
+                </a>
+                <a href="#" class="flex items-center gap-2 px-3 py-2 hover:bg-[#F0ECE6] text-[#1F1E1D]">
+                  <span class="material-symbols-outlined text-[15px]">content_copy</span>Duplicate
+                </a>
+                <div class="border-t border-[#EFECE6] my-1"></div>
+                <button onclick="deleteResume({{ resume.id }})"
+                        class="flex items-center gap-2 px-3 py-2 hover:bg-[#FEF2F2] text-[#ef4444] w-full text-left">
+                  <span class="material-symbols-outlined text-[15px]">delete</span>Delete
+                </button>
+              </div>
+            </div>
+          </div>
+          {% if resume.job_target %}
+          <p class="text-[12px] text-[#8F8C86] mb-2 truncate">{{ resume.job_target }}</p>
+          {% endif %}
+          <p class="text-[11px] text-[#B0ACA6] mb-3">
+            Last edited {{ resume.updated_at.strftime('%b %d, %Y') if resume.updated_at else '—' }}
+          </p>
+
+          <!-- Actions -->
+          <div class="flex items-center gap-2 pt-3 border-t border-[#EFECE6]">
+            <a href="/resume/editor/{{ resume.id }}"
+               class="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl border border-[#E5E1D9] bg-white text-[12px] font-medium text-[#1F1E1D] hover:bg-[#F5F3FF] hover:border-[#c4b5fd] hover:text-[#7c3aed] transition-all">
+              <span class="material-symbols-outlined text-[14px]">edit</span>Edit
+            </a>
+            <a href="#"
+               class="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl border border-[#E5E1D9] bg-white text-[12px] font-medium text-[#1F1E1D] hover:bg-[#ECFEFF] hover:border-[#67e8f9] hover:text-[#06b6d4] transition-all">
+              <span class="material-symbols-outlined text-[14px]">download</span>PDF
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <!-- Empty state -->
+    <div class="flex flex-col items-center justify-center h-full text-center py-24">
+      <div class="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
+           style="background:rgba(124,58,237,.07);border:1px solid rgba(124,58,237,.13)">
+        <span class="material-symbols-outlined text-[30px]" style="color:#7c3aed;font-variation-settings:'FILL' 1">description</span>
+      </div>
+      <h2 class="text-[17px] font-semibold text-[#1F1E1D] mb-2">No resumes yet</h2>
+      <p class="text-[13.5px] text-[#8F8C86] mb-6 max-w-xs leading-relaxed">
+        Create your first AI-powered resume with live preview and chat assistance.
+      </p>
+      <a href="/resume/editor"
+         class="flex items-center gap-2 px-6 py-2.5 rounded-xl text-[13.5px] font-semibold text-white hover:opacity-90 active:scale-95 transition-all"
+         style="background:linear-gradient(135deg,#7c3aed,#06b6d4)">
+        <span class="material-symbols-outlined text-[16px]" style="font-variation-settings:'FILL' 1">add</span>
+        Create First Resume
+      </a>
+    </div>
+    {% endif %}
+  </main>
+</div>
+
+
+<script>
+/* Sidebar */
+const sidebar = document.getElementById('sidebar');
+document.getElementById('hamburger-btn')?.addEventListener('click', () => sidebar.classList.toggle('hidden'));
+document.getElementById('toggle-sidebar-btn')?.addEventListener('click', () => sidebar.classList.toggle('hidden'));
+
+/* Search */
+document.getElementById('searchInput')?.addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('[data-title]').forEach(card => {
+    card.style.display = (card.dataset.title || '').includes(q) ? '' : 'none';
+  });
+});
+
+/* Dropdown menus */
+function toggleMenu(id) {
+  document.querySelectorAll('[id^="dropdown-"]').forEach(d => {
+    if (d.id !== `dropdown-${id}`) d.classList.add('hidden');
+  });
+  document.getElementById(`dropdown-${id}`)?.classList.toggle('hidden');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('[id^="menu-"]')) {
+    document.querySelectorAll('[id^="dropdown-"]').forEach(d => d.classList.add('hidden'));
+  }
+});
+
+/* Delete */
+async function deleteResume(id) {
+  if (!confirm('Delete this resume? This cannot be undone.')) return;
+  const res = await fetch(`/resume/${id}/delete`, { method: 'POST' });
+  if (res.ok) location.reload();
+  else alert('Failed to delete resume.');
+}
+</script>
+
+</body>
+</html>
