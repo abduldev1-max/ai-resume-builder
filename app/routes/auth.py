@@ -104,6 +104,11 @@ def auth_page():
 @auth_bp.route("/login")
 def login():
     """Kick off Google OAuth flow."""
+    # Check if Render environment variables are actually set
+    if not os.environ.get("GOOGLE_CLIENT_ID") or not os.environ.get("GOOGLE_CLIENT_SECRET"):
+        flash("Google Login is not configured! Please add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in the Render dashboard.", "error")
+        return redirect(url_for("auth.auth_page"))
+
     # Force the session to be saved NOW so the OAuth state cookie persists
     # across Gunicorn workers (avoids state mismatch on callback).
     session.modified = True
