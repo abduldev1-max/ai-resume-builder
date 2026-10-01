@@ -84,6 +84,9 @@ def google_logged_in(blueprint, token):
         "email": user.email,
         "first_name": user.first_name,
     }
+    
+    # Force Flask to save the session cookie NOW during this redirect phase
+    session.modified = True
 
     # Return False so flask-dance does NOT try to store the OAuth token in the DB
     # (we don't need persistent token storage; session is enough)
