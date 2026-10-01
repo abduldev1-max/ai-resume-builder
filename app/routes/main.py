@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, session, redirect, url_for
+from flask import Blueprint, render_template, session, redirect, url_for, make_response
 
 main_bp = Blueprint("main", __name__)
 
@@ -9,4 +9,10 @@ def index():
     # Already logged in → go straight to dashboard
     if user:
         return redirect(url_for("resume.dashboard"))
-    return render_template("index.html", user=user)
+    
+    # Render index but prevent caching so OAuth redirects don't show stale page
+    resp = make_response(render_template("index.html", user=user))
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "-1"
+    return resp
