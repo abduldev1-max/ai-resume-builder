@@ -24,6 +24,12 @@ def create_app():
         db_url = db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
     app.config["SQLALCHEMY_DATABASE_URI"] = db_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    
+    # ── Fix for "SSL connection has been closed unexpectedly" (Neon Serverless DB)
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_pre_ping": True,
+        "pool_recycle": 300,
+    }
 
     # ── Session config ──────────────────────────────────────
     # Use Flask's built-in signed cookie sessions (NO server-side storage).
