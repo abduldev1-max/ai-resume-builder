@@ -98,7 +98,14 @@ def auth_page():
     """Render the sign-in / sign-up page."""
     if "user" in session:
         return redirect(url_for("resume.dashboard"))
-    return render_template("auth.html")
+        
+    # Prevent caching of the auth page
+    from flask import make_response
+    resp = make_response(render_template("auth.html"))
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "-1"
+    return resp
 
 
 @auth_bp.route("/login")
