@@ -86,10 +86,13 @@
 </head>
 <body class="font-sans antialiased overflow-hidden flex h-screen bg-[#FAF9F6]">
 
+<!-- Mobile sidebar backdrop -->
+<div id="sidebar-backdrop" class="fixed inset-0 bg-black/40 z-20 hidden md:hidden" onclick="closeSidebar()"></div>
+
 <!-- ══════════════════════════════════
      SIDEBAR (identical to dashboard)
 ══════════════════════════════════ -->
-<aside class="w-[260px] flex-shrink-0 bg-[#FBF9F7] border-r border-[#E8E5DF] flex flex-col h-full z-30 select-none" id="sidebar">
+<aside class="fixed md:relative w-[260px] flex-shrink-0 bg-[#FBF9F7] border-r border-[#E8E5DF] flex flex-col h-full z-30 select-none transition-transform duration-300 -translate-x-full md:translate-x-0" id="sidebar">
   <div class="flex flex-col h-full overflow-hidden">
 
     <!-- Logo -->
@@ -215,8 +218,8 @@
   <div class="flex-1 flex overflow-hidden">
 
     <!-- ── LEFT: FORM PANEL ── -->
-    <div class="w-[480px] flex-shrink-0 overflow-y-auto bg-[#FAF9F6] border-r border-[#E8E5DF]" id="edit-panel">
-      <form method="POST" action="/resume/new" id="resumeForm" class="px-6 py-6">
+    <div class="w-full md:w-[480px] md:flex-shrink-0 overflow-y-auto bg-[#FAF9F6] border-r border-[#E8E5DF]" id="edit-panel">
+      <form method="POST" action="/resume/new" id="resumeForm" class="px-4 sm:px-6 py-5 sm:py-6">
 
         <!-- Resume Title -->
         <div class="section-card">
@@ -242,7 +245,7 @@
             <span class="material-symbols-outlined text-[18px]" style="color:#06b6d4;font-variation-settings:'FILL' 1">person</span>
             Personal Information
           </div>
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="form-label">First Name</label>
               <input name="first_name" id="f-first" type="text" class="form-input" placeholder="Alex">
@@ -255,11 +258,11 @@
               <label class="form-label">Email</label>
               <input name="email" id="f-email" type="email" class="form-input" placeholder="alex@example.com">
             </div>
-            <div>
+            <div class="sm:col-span-1">
               <label class="form-label">Phone</label>
               <input name="phone" id="f-phone" type="text" class="form-input" placeholder="(555) 000-0000">
             </div>
-            <div>
+            <div class="sm:col-span-1">
               <label class="form-label">Location</label>
               <input name="location" id="f-location" type="text" class="form-input" placeholder="San Francisco, CA">
             </div>
@@ -329,7 +332,7 @@
     </div>
 
     <!-- ── RIGHT: LIVE PREVIEW PANEL ── -->
-    <div class="flex-1 bg-[#F4F2EE] overflow-y-auto flex flex-col" id="preview-panel">
+    <div class="hidden md:flex flex-1 bg-[#F4F2EE] overflow-y-auto flex-col" id="preview-panel">
 
       <!-- Preview header -->
       <div class="flex items-center justify-between px-5 py-3 border-b border-[#E8E5DF] bg-[#FBF9F7] flex-shrink-0">
@@ -403,19 +406,40 @@
 
 <script>
 /* ── Sidebar toggle ── */
-const sidebar = document.getElementById('sidebar');
-document.getElementById('hamburger-btn')?.addEventListener('click', () => sidebar.classList.toggle('hidden'));
-document.getElementById('toggle-sidebar-btn')?.addEventListener('click', () => sidebar.classList.toggle('hidden'));
+const sidebar   = document.getElementById('sidebar');
+const backdrop  = document.getElementById('sidebar-backdrop');
 
-/* ── Tab toggle (mobile) ── */
+function openSidebar()  { sidebar.classList.remove('-translate-x-full'); backdrop.classList.remove('hidden'); }
+function closeSidebar() { sidebar.classList.add('-translate-x-full');    backdrop.classList.add('hidden'); }
+function toggleSidebar() { sidebar.classList.contains('-translate-x-full') ? openSidebar() : closeSidebar(); }
+
+document.getElementById('hamburger-btn')?.addEventListener('click', toggleSidebar);
+document.getElementById('toggle-sidebar-btn')?.addEventListener('click', closeSidebar);
+
+/* On desktop (≥768px) always show sidebar */
+const mq = window.matchMedia('(min-width: 768px)');
+function handleMQ(e) {
+  if (e.matches) { sidebar.classList.remove('-translate-x-full'); backdrop.classList.add('hidden'); }
+  else           { sidebar.classList.add('-translate-x-full'); }
+}
+mq.addEventListener('change', handleMQ);
+handleMQ(mq);
+
+/* ── Tab toggle: Edit / Preview ── */
 function switchTab(tab) {
   const editPanel    = document.getElementById('edit-panel');
   const previewPanel = document.getElementById('preview-panel');
   document.getElementById('tab-edit').classList.toggle('active', tab === 'edit');
   document.getElementById('tab-preview').classList.toggle('active', tab === 'preview');
+  /* On mobile show only active panel; on desktop show both */
   if (window.innerWidth < 768) {
-    editPanel.style.display    = tab === 'edit'    ? '' : 'none';
-    previewPanel.style.display = tab === 'preview' ? '' : 'none';
+    if (tab === 'edit') {
+      editPanel.classList.remove('hidden');    editPanel.style.display = '';
+      previewPanel.classList.add('hidden');    previewPanel.style.display = 'none';
+    } else {
+      editPanel.classList.add('hidden');       editPanel.style.display = 'none';
+      previewPanel.classList.remove('hidden'); previewPanel.style.display = 'flex';
+    }
   }
 }
 
