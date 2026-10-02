@@ -17,13 +17,10 @@ if os.environ.get("FLASK_ENV") == "development":
 # Relax scope checking — Google sometimes returns a slightly different scope set
 os.environ.setdefault("OAUTHLIB_RELAX_TOKEN_SCOPE", "1")
 
-# In production (Render) we must tell flask-dance the exact HTTPS callback URL.
-# In local dev we leave it as None so flask-dance auto-detects localhost.
-_render_url = os.environ.get("RENDER_EXTERNAL_URL") or os.environ.get("PRODUCTION_URL", "").rstrip("/")
-if _render_url:
-    _redirect_url = f"{_render_url}/login/google/authorized"
-else:
-    _redirect_url = None
+# In production (Render), Flask-Dance auto-detects the correct callback URL
+# (/login/google/authorized) from the RENDER_EXTERNAL_URL + ProxyFix headers.
+# We do NOT set redirect_url here — that parameter means "where to send the user
+# AFTER oauth", which is handled by redirect_to='auth.google_done' below.
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -32,9 +29,8 @@ google_bp = make_google_blueprint(
     client_secret=os.environ.get("GOOGLE_CLIENT_SECRET"),
     scope=["openid", "https://www.googleapis.com/auth/userinfo.email",
            "https://www.googleapis.com/auth/userinfo.profile"],
-    # Redirect to our dedicated done route — keeps the flow inside our app
+    # After OAuth finishes, send user to this route (not back to the callback URL)
     redirect_to="auth.google_done",
-    redirect_url=_redirect_url,
 )
 
 
