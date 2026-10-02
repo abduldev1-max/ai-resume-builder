@@ -104,12 +104,15 @@
   .row-deleting { animation: rowFadeOut 0.3s ease forwards; overflow: hidden; }
 </style>
 </head>
-<body class="font-sans antialiased bg-[#FAF9F6] text-[#1F1E1D] overflow-hidden flex h-screen">
+<body class="font-sans antialiased bg-[#FAF9F6] text-[#1F1E1D] flex h-screen overflow-hidden">
+
+<!-- Mobile sidebar backdrop -->
+<div id="sidebar-backdrop" class="fixed inset-0 bg-black/40 z-20 hidden md:hidden" onclick="closeSidebar()"></div>
 
 <!-- ══════════════════════════════════
      LEFT SIDEBAR
 ══════════════════════════════════ -->
-<aside class="w-[260px] flex-shrink-0 bg-[#FBF9F7] border-r border-[#E8E5DF] flex flex-col justify-between h-full z-30 select-none transition-all duration-300" id="sidebar">
+<aside class="fixed md:relative w-[260px] flex-shrink-0 bg-[#FBF9F7] border-r border-[#E8E5DF] flex flex-col justify-between h-full z-30 select-none transition-transform duration-300 -translate-x-full md:translate-x-0" id="sidebar">
   <div class="flex flex-col h-full overflow-hidden">
 
     <!-- Logo / Brand -->
@@ -250,7 +253,7 @@
 <!-- ══════════════════════════════════
      MAIN CONTENT
 ══════════════════════════════════ -->
-<div class="flex-1 flex flex-col h-full bg-[#FAF9F6] overflow-hidden relative">
+<div class="flex-1 flex flex-col h-full bg-[#FAF9F6] overflow-hidden relative min-w-0">
 
   <!-- Top App Bar -->
   <header class="h-14 px-4 sm:px-6 border-b border-[#E8E5DF] flex items-center justify-between bg-[#FAF9F6] z-10">
@@ -284,22 +287,22 @@
 
 
   <!-- ── Scrollable Body ── -->
-  <main class="flex-1 overflow-y-auto px-6 py-7 flex flex-col">
-    <div class="w-full max-w-4xl mx-auto flex flex-col gap-6">
+  <main class="flex-1 overflow-y-auto px-4 sm:px-6 py-5 sm:py-7 flex flex-col">
+    <div class="w-full max-w-4xl mx-auto flex flex-col gap-5 sm:gap-6">
 
       <!-- ── Hero Banner ── -->
-      <div class="hero-gradient rounded-2xl px-7 py-6 flex items-center justify-between border border-[#e9d5ff] relative overflow-hidden">
+      <div class="hero-gradient rounded-2xl px-5 py-5 sm:px-7 sm:py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border border-[#e9d5ff] relative overflow-hidden">
         <!-- Left text -->
         <div>
           <p class="text-[12px] font-semibold uppercase tracking-widest text-[#7c3aed] mb-1">AI Resume Builder</p>
-          <h1 class="text-[1.45rem] font-bold text-[#1F1E1D] tracking-tight leading-snug">
+          <h1 class="text-[1.25rem] sm:text-[1.45rem] font-bold text-[#1F1E1D] tracking-tight leading-snug">
             Welcome back, {{ user.first_name if user and user.first_name else 'there' }} 👋
           </h1>
-          <p class="text-[13.5px] text-[#666461] mt-1">Your AI-powered career toolkit is ready.</p>
+          <p class="text-[13px] sm:text-[13.5px] text-[#666461] mt-1">Your AI-powered career toolkit is ready.</p>
         </div>
-        <!-- Right CTA -->
+        <!-- CTA -->
         <a href="/resume/new"
-           class="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-semibold text-white shadow-sm hover:opacity-90 active:scale-95 transition-all"
+           class="self-start sm:flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-semibold text-white shadow-sm hover:opacity-90 active:scale-95 transition-all"
            style="background:linear-gradient(135deg,#7c3aed,#06b6d4)">
           <span class="material-symbols-outlined text-[16px]" style="font-variation-settings:'FILL' 1">add</span>
           New Resume
@@ -310,35 +313,35 @@
       </div>
 
       <!-- ── Stats Row ── -->
-      <div class="grid grid-cols-3 gap-3">
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
 
-        <div class="stat-pill bg-white border border-[#E7E3DC] rounded-2xl px-5 py-4 flex items-center gap-4">
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(124,58,237,0.1)">
-            <span class="material-symbols-outlined text-[20px]" style="color:#7c3aed;font-variation-settings:'FILL' 1">description</span>
+        <div class="stat-pill bg-white border border-[#E7E3DC] rounded-2xl px-4 sm:px-5 py-4 flex items-center gap-3 sm:gap-4">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(124,58,237,0.1)">
+            <span class="material-symbols-outlined text-[18px] sm:text-[20px]" style="color:#7c3aed;font-variation-settings:'FILL' 1">description</span>
           </div>
           <div>
-            <div class="text-[1.6rem] font-bold text-[#1F1E1D] leading-none tracking-tight">{{ resumes|length if resumes else 0 }}</div>
-            <div class="text-[11.5px] text-[#8F8C86] mt-0.5">Resumes Created</div>
+            <div class="text-[1.4rem] sm:text-[1.6rem] font-bold text-[#1F1E1D] leading-none tracking-tight">{{ resumes|length if resumes else 0 }}</div>
+            <div class="text-[10.5px] sm:text-[11.5px] text-[#8F8C86] mt-0.5">Resumes Created</div>
           </div>
         </div>
 
-        <div class="stat-pill bg-white border border-[#E7E3DC] rounded-2xl px-5 py-4 flex items-center gap-4">
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(6,182,212,0.1)">
-            <span class="material-symbols-outlined text-[20px]" style="color:#06b6d4;font-variation-settings:'FILL' 1">analytics</span>
+        <div class="stat-pill bg-white border border-[#E7E3DC] rounded-2xl px-4 sm:px-5 py-4 flex items-center gap-3 sm:gap-4">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(6,182,212,0.1)">
+            <span class="material-symbols-outlined text-[18px] sm:text-[20px]" style="color:#06b6d4;font-variation-settings:'FILL' 1">analytics</span>
           </div>
           <div>
-            <div class="text-[1.6rem] font-bold text-[#1F1E1D] leading-none tracking-tight">—</div>
-            <div class="text-[11.5px] text-[#8F8C86] mt-0.5">Avg ATS Score</div>
+            <div class="text-[1.4rem] sm:text-[1.6rem] font-bold text-[#1F1E1D] leading-none tracking-tight">—</div>
+            <div class="text-[10.5px] sm:text-[11.5px] text-[#8F8C86] mt-0.5">Avg ATS Score</div>
           </div>
         </div>
 
-        <div class="stat-pill bg-white border border-[#E7E3DC] rounded-2xl px-5 py-4 flex items-center gap-4">
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(217,119,87,0.1)">
-            <span class="material-symbols-outlined text-[20px]" style="color:#D97757;font-variation-settings:'FILL' 1">work</span>
+        <div class="stat-pill bg-white border border-[#E7E3DC] rounded-2xl px-4 sm:px-5 py-4 flex items-center gap-3 sm:gap-4 col-span-2 sm:col-span-1">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:rgba(217,119,87,0.1)">
+            <span class="material-symbols-outlined text-[18px] sm:text-[20px]" style="color:#D97757;font-variation-settings:'FILL' 1">work</span>
           </div>
           <div>
-            <div class="text-[1.6rem] font-bold text-[#1F1E1D] leading-none tracking-tight">0</div>
-            <div class="text-[11.5px] text-[#8F8C86] mt-0.5">Jobs Tracked</div>
+            <div class="text-[1.4rem] sm:text-[1.6rem] font-bold text-[#1F1E1D] leading-none tracking-tight">0</div>
+            <div class="text-[10.5px] sm:text-[11.5px] text-[#8F8C86] mt-0.5">Jobs Tracked</div>
           </div>
         </div>
 
@@ -361,7 +364,42 @@
 
         {% if resumes %}
         <div class="bg-white border border-[#E7E3DC] rounded-2xl overflow-hidden">
-          <table class="w-full text-left border-collapse" id="resumesTable">
+          <!-- Mobile card list (visible on xs only) -->
+          <div class="sm:hidden divide-y divide-[#EFECE6]">
+            {% for resume in resumes %}
+            <div class="px-4 py-3.5 resume-row" data-title="{{ resume.title|lower }}">
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                       style="background:rgba(124,58,237,0.07);border:1px solid rgba(124,58,237,0.12)">
+                    <span class="material-symbols-outlined text-[17px]" style="color:#7c3aed;font-variation-settings:'FILL' 1">description</span>
+                  </div>
+                  <div class="min-w-0">
+                    <div class="text-[13.5px] font-semibold text-[#1F1E1D] truncate">{{ resume.title }}</div>
+                    {% if resume.job_target %}<div class="text-[11.5px] text-[#8F8C86] truncate">{{ resume.job_target }}</div>{% endif %}
+                    <div class="text-[11px] text-[#BDB9B2] mt-0.5">{{ resume.updated_at.strftime('%b %d, %Y') if resume.updated_at else '—' }}</div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1.5 flex-shrink-0">
+                  <a href="/resume/editor/{{ resume.id }}"
+                     class="p-2 rounded-lg border border-[#E5E1D9] bg-white text-[#7c3aed] hover:bg-[#F5F3FF] transition-all" title="Edit">
+                    <span class="material-symbols-outlined text-[16px]">edit</span>
+                  </a>
+                  <a href="/resume/{{ resume.id }}/download"
+                     class="p-2 rounded-lg border border-[#E5E1D9] bg-white text-[#1F1E1D] hover:bg-[#FAF9F6] transition-colors" title="Download PDF">
+                    <span class="material-symbols-outlined text-[16px]">download</span>
+                  </a>
+                  <button class="p-2 rounded-lg border border-[#fecdca] bg-[#fff5f5] text-[#dc2626] hover:bg-[#fee2e2] transition-all" onclick="openDeleteModal({{ resume.id }}, this)" title="Delete">
+                    <span class="material-symbols-outlined text-[16px]">delete</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+
+          <!-- Desktop table (hidden on xs) -->
+          <table class="hidden sm:table w-full text-left border-collapse" id="resumesTable">
             <thead>
               <tr class="bg-[#FAF9F6] border-b border-[#EFECE6]">
                 <th class="text-[11px] font-semibold uppercase tracking-widest text-[#8F8C86] px-5 py-3">Resume</th>
@@ -506,16 +544,42 @@
 <script>
 
   /* ── Sidebar toggle ── */
-  const sidebar       = document.getElementById('sidebar');
-  const toggleBtn     = document.getElementById('toggle-sidebar-btn');   // inside sidebar
-  const hamburgerBtn  = document.getElementById('hamburger-btn');         // always-visible topbar btn
+  const sidebar      = document.getElementById('sidebar');
+  const backdrop     = document.getElementById('sidebar-backdrop');
+  const toggleBtn    = document.getElementById('toggle-sidebar-btn');
+  const hamburgerBtn = document.getElementById('hamburger-btn');
 
+  function openSidebar() {
+    sidebar.classList.remove('-translate-x-full');
+    backdrop.classList.remove('hidden');
+  }
+  function closeSidebar() {
+    sidebar.classList.add('-translate-x-full');
+    backdrop.classList.add('hidden');
+  }
   function toggleSidebar() {
-    sidebar.classList.toggle('hidden');
+    if (sidebar.classList.contains('-translate-x-full')) {
+      openSidebar();
+    } else {
+      closeSidebar();
+    }
   }
 
-  toggleBtn?.addEventListener('click', toggleSidebar);
+  toggleBtn?.addEventListener('click', closeSidebar);
   hamburgerBtn?.addEventListener('click', toggleSidebar);
+
+  /* On desktop (≥768px) always show sidebar */
+  const mq = window.matchMedia('(min-width: 768px)');
+  function handleMQ(e) {
+    if (e.matches) {
+      sidebar.classList.remove('-translate-x-full');
+      backdrop.classList.add('hidden');
+    } else {
+      sidebar.classList.add('-translate-x-full');
+    }
+  }
+  mq.addEventListener('change', handleMQ);
+  handleMQ(mq);
 
   /* ── Live search filter ── */
   const searchInput = document.getElementById('resumeSearch');
